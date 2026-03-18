@@ -37,6 +37,4 @@ JARVIS is a fully voice-controlled AI desktop assistant that executes real multi
 | Communication | WebSocket |
 | Automation | PyAutoGUI, PyPerClip |
 
-## Team
-- Backend & Integration — Leharin
-- Frontend — Antigravity
+
