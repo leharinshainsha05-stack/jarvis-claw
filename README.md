@@ -39,12 +39,15 @@ The result is **zero context switching**. The developer stays in flow. JARVIS ha
 
 ## Tech Stack
 | Component | Technology |
-|-----------|-----------|
-| Voice Output | Murf.ai API |
-| Voice Input | Web Speech API + SoundDevice |
+|-----------|------------|
+| Voice Output | Murf.ai API — Natural human voice output |
+| Voice Input | Web Speech API + SoundDevice + SpeechRecognition |
 | AI Brain | Ollama + Gemma3:1b (offline) |
-| Backend | Python |
-| Frontend | HTML, CSS, JavaScript |
-| Communication | WebSocket |
-| Automation | PyAutoGUI, PyPerClip |
+| Backend | Python, WebSockets, PyAutoGUI, PyPerClip, smtplib, pyttsx3 |
+| Frontend | HTML5, CSS3, JavaScript |
+| Communication | WebSockets — Real-time frontend-backend |
+| Automation | PyAutoGUI, PyPerClip, WhatsApp Desktop |
+| APIs & Services | Open-Meteo API, Nominatim API, Battery API |
+| Tools | Git + GitHub, PowerShell, JSON |
+
 
