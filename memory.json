@@ -1,0 +1,82 @@
+[
+    {
+        "timestamp": "2026-03-17 20:11:29",
+        "task": "WhatsApp Message",
+        "detail": "To: Amma | Msg: how r u?"
+    },
+    {
+        "timestamp": "2026-03-17 20:23:54",
+        "task": "Browser Action",
+        "detail": "YouTube: Homepage"
+    },
+    {
+        "timestamp": "2026-03-17 20:28:14",
+        "task": "WhatsApp Message",
+        "detail": "To: Amma | Msg: what are you doing?"
+    },
+    {
+        "timestamp": "2026-03-17 20:34:46",
+        "task": "WhatsApp Message",
+        "detail": "To: Amma | Msg: what are you doing?"
+    },
+    {
+        "timestamp": "2026-03-18 01:57:06",
+        "task": "YouTube",
+        "detail": "Homepage"
+    },
+    {
+        "timestamp": "2026-03-18 01:57:49",
+        "task": "Gemini Chat",
+        "detail": "Q: who is sundar pichai | A: Sundar Pichai is the CEO of Alphabet, the parent company of Google and other ventures. He\u2019s a seasoned tech leader, known for his strategic vision."
+    },
+    {
+        "timestamp": "2026-03-18 02:01:39",
+        "task": "Gemini Chat",
+        "detail": "Q: who is sundar pichai? | A: Sundar Pichai is Alphabet\u2019s CEO, and a significant figure in the tech industry. He\u2019s a seasoned leader with a knack for building and guiding large tech companies."
+    },
+    {
+        "timestamp": "2026-03-18 02:04:08",
+        "task": "Gemini Chat",
+        "detail": "Q: who is sundar | A: Sundar Pichai is the CEO of Alphabet, the company that owns Google and other brands. He\u2019s a big name in tech, known for leading big projects and driving innovation. Basically, he\u2019s the guy who keeps the Google machine running."
+    },
+    {
+        "timestamp": "2026-03-18 02:07:25",
+        "task": "Gemini Chat",
+        "detail": "Q: who is sundar pichai | A: Alright, let\u2019s cut to the chase. Sundar Pichai is the CEO of Alphabet, the company that owns Google and YouTube. He\u2019s a pivotal figure in the tech world, known for leading massive projects and driving innovation \u2013 think the search engine, Android, and YouTube.  Want a quick rundown of his key areas of responsibility?"
+    },
+    {
+        "timestamp": "2026-03-18 10:33:43",
+        "task": "WhatsApp Call",
+        "detail": "voice to Amma"
+    },
+    {
+        "timestamp": "2026-03-18 11:22:04",
+        "task": "YouTube",
+        "detail": "Homepage"
+    },
+    {
+        "timestamp": "2026-03-18 11:24:28",
+        "task": "Chat",
+        "detail": "Q: who is elon musk | A: Alright, let\u2019s dive into the fascinating world of Elon Musk. He\u2019s a\u2026well, he\u2019s a busy one. Essentially, he\u2019s the founder of a vast, incredibly ambitious tech empire. Think Tesla, SpaceX, Neuralink, and X (formerly Twitter). \n\nHe\u2019s primarily known for leading these companies, pushing boundaries in areas like electric vehicles, space exploration, and artificial intelligence. It\u2019s a whole lot of driving, building, and generally, risk-taking, you know?"
+    },
+    {
+        "timestamp": "2026-03-18 12:49:45",
+        "task": "WhatsApp Call",
+        "detail": "voice to Amma"
+    },
+    {
+        "timestamp": "2026-03-18 12:50:17",
+        "task": "YouTube",
+        "detail": "Homepage"
+    },
+    {
+        "timestamp": "2026-03-18 12:52:05",
+        "task": "WhatsApp Call",
+        "detail": "voice to Amma."
+    },
+    {
+        "timestamp": "2026-03-18 12:57:17",
+        "task": "WhatsApp Call",
+        "detail": "voice to Amma"
+    }
+]
