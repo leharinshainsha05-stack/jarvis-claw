@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS — Daily Brief</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary:#00d2ff; --dark-bg:#010a14; --panel-bg:rgba(0,20,40,0.85);
+            --border:rgba(0,210,255,0.3); --glow:rgba(0,210,255,0.5);
+            --text-dim:rgba(0,210,255,0.55); --gold:#ffd700; --red:#ff4d4d;
+            --green:#00ff88; --purple:#a78bfa;
+            --font-hud:'Orbitron',sans-serif; --font-ui:'Rajdhani',sans-serif;
+            --font-mono:'Share Tech Mono',monospace;
+        }
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            background:var(--dark-bg);color:var(--primary);font-family:var(--font-ui);
+            min-height:100vh;font-size:16px;
+            background-image:radial-gradient(ellipse at 50% 20%,rgba(0,31,63,0.5) 0%,transparent 60%),
+                             linear-gradient(180deg,#010a14 0%,#020f1e 100%);
+        }
+        /* Grid bg */
+        body::before{content:'';position:fixed;inset:0;pointer-events:none;
+            background-image:linear-gradient(rgba(0,210,255,0.03) 1px,transparent 1px),
+                             linear-gradient(90deg,rgba(0,210,255,0.03) 1px,transparent 1px);
+            background-size:60px 60px;z-index:0;}
+
+        .page-wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 24px 60px;}
+
+        /* ── HEADER ── */
+        .brief-header{
+            display:flex;align-items:center;justify-content:space-between;
+            padding:20px 0 18px;border-bottom:2px solid var(--border);margin-bottom:28px;
+        }
+        .brief-header-left{display:flex;align-items:center;gap:16px;}
+        .back-btn{
+            background:transparent;border:1px solid var(--border);color:var(--text-dim);
+            padding:8px 16px;font-family:var(--font-hud);font-size:0.7rem;letter-spacing:2px;
+            cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;
+        }
+        .back-btn:hover{border-color:var(--primary);color:var(--primary);}
+        .brief-title{font-family:var(--font-hud);font-size:1.6rem;font-weight:900;letter-spacing:8px;text-shadow:0 0 20px var(--primary);}
+        .brief-date-display{font-family:var(--font-mono);font-size:0.85rem;opacity:0.6;margin-top:4px;}
+        .date-nav{display:flex;align-items:center;gap:12px;}
+        .date-nav button{
+            background:transparent;border:1px solid var(--border);color:var(--text-dim);
+            padding:8px 14px;font-family:var(--font-hud);font-size:0.7rem;cursor:pointer;transition:all 0.2s;
+        }
+        .date-nav button:hover{border-color:var(--primary);color:var(--primary);}
+        .date-nav input[type=date]{
+            background:rgba(0,15,35,0.9);border:1px solid var(--border);color:var(--primary);
+            padding:8px 12px;font-family:var(--font-mono);font-size:0.82rem;outline:none;
+        }
+
+        /* ── SECTION CARD ── */
+        .section-card{
+            background:var(--panel-bg);border:1px solid var(--border);
+            border-left:3px solid var(--primary);
+            padding:22px 24px;margin-bottom:20px;backdrop-filter:blur(10px);
+            transition:border-color 0.3s;
+        }
+        .section-card.personal{border-left-color:var(--purple);}
+        .section-card.todos{border-left-color:var(--gold);}
+        .section-card.deadlines{border-left-color:var(--red);}
+
+        .section-header{
+            display:flex;align-items:center;justify-content:space-between;
+            margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);
+        }
+        .section-title-row{display:flex;align-items:center;gap:12px;}
+        .section-icon{font-size:1.4rem;}
+        .section-title{font-family:var(--font-hud);font-size:0.9rem;letter-spacing:4px;}
+        .section-count{
+            font-family:var(--font-mono);font-size:0.72rem;
+            padding:3px 10px;background:rgba(0,210,255,0.1);border:1px solid var(--border);
+        }
+        .edit-btn{
+            background:transparent;border:1px solid var(--border);color:var(--text-dim);
+            padding:6px 14px;font-family:var(--font-hud);font-size:0.65rem;letter-spacing:2px;
+            cursor:pointer;transition:all 0.2s;
+        }
+        .edit-btn:hover,.edit-btn.active{border-color:var(--primary);color:var(--primary);background:rgba(0,210,255,0.08);}
+
+        /* ── MORNING BRIEF SECTION ── */
+        .brief-text-display{
+            font-size:1.05rem;line-height:1.75;font-family:var(--font-ui);
+            color:var(--primary);min-height:60px;
+        }
+        .brief-text-display.empty{opacity:0.35;font-style:italic;}
+        .brief-textarea{
+            width:100%;min-height:100px;background:rgba(0,10,25,0.9);
+            border:1px solid var(--primary);color:var(--primary);
+            padding:12px 14px;font-family:var(--font-ui);font-size:1rem;
+            line-height:1.65;outline:none;resize:vertical;display:none;
+        }
+
+        /* ── GOALS LIST ── */
+        .goals-list{display:flex;flex-direction:column;gap:6px;}
+        .goal-item{
+            display:flex;align-items:flex-start;gap:12px;
+            padding:10px 14px;background:rgba(0,15,35,0.7);
+            border:1px solid var(--border);border-left:3px solid var(--primary);
+            transition:all 0.2s;
+        }
+        .goal-item.done{opacity:0.45;border-left-color:var(--green);}
+        .goal-item.done .goal-text{text-decoration:line-through;}
+        .goal-check{
+            width:18px;height:18px;border:2px solid var(--primary);border-radius:2px;
+            cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;
+            transition:all 0.2s;font-size:12px;
+        }
+        .goal-check:hover{background:rgba(0,210,255,0.15);}
+        .goal-check.checked{background:var(--green);border-color:var(--green);color:#000;}
+        .goal-text{flex:1;font-size:0.96rem;font-family:var(--font-ui);line-height:1.5;}
+        .goal-text-input{
+            flex:1;background:transparent;border:none;border-bottom:1px solid var(--border);
+            color:var(--primary);font-family:var(--font-ui);font-size:0.96rem;outline:none;
+            padding:2px 4px;display:none;
+        }
+        .goal-actions{display:flex;gap:6px;flex-shrink:0;}
+        .goal-action-btn{
+            background:transparent;border:none;color:var(--text-dim);
+            cursor:pointer;font-size:0.78rem;padding:4px 8px;
+            font-family:var(--font-mono);transition:color 0.2s;
+        }
+        .goal-action-btn:hover{color:var(--primary);}
+        .goal-action-btn.delete:hover{color:var(--red);}
+
+        /* ── ADD ITEM ── */
+        .add-item-row{
+            display:flex;gap:10px;margin-top:12px;
+            padding-top:12px;border-top:1px solid var(--border);
+        }
+        .add-input{
+            flex:1;background:rgba(0,10,25,0.85);border:1px solid var(--border);
+            color:var(--primary);padding:9px 14px;font-family:var(--font-mono);
+            font-size:0.88rem;outline:none;transition:border-color 0.2s;
+        }
+        .add-input:focus{border-color:var(--primary);}
+        .add-input::placeholder{color:var(--text-dim);}
+        .add-btn{
+            background:transparent;border:1px solid var(--primary);color:var(--primary);
+            padding:9px 18px;font-family:var(--font-hud);font-size:0.7rem;letter-spacing:2px;
+            cursor:pointer;transition:all 0.2s;white-space:nowrap;
+        }
+        .add-btn:hover{background:rgba(0,210,255,0.1);box-shadow:0 0 10px var(--glow);}
+
+        /* ── DEADLINE ITEMS ── */
+        .deadline-item-brief{
+            display:flex;align-items:flex-start;gap:12px;
+            padding:12px 14px;background:rgba(0,15,35,0.7);
+            border:1px solid var(--border);border-left:3px solid var(--red);
+            margin-bottom:6px;transition:all 0.2s;
+        }
+        .deadline-item-brief.done{opacity:0.4;border-left-color:var(--green);}
+        .dl-info{flex:1;}
+        .dl-title-brief{font-size:1rem;font-family:var(--font-ui);margin-bottom:4px;}
+        .dl-meta{display:flex;gap:12px;font-family:var(--font-mono);font-size:0.74rem;color:var(--text-dim);}
+        .dl-badge{
+            padding:2px 10px;font-size:0.7rem;font-family:var(--font-mono);
+            border-radius:2px;white-space:nowrap;
+        }
+        .dl-badge.urgent{color:var(--red);border:1px solid var(--red);background:rgba(255,77,77,0.08);}
+        .dl-badge.warning{color:var(--gold);border:1px solid var(--gold);background:rgba(255,215,0,0.08);}
+        .dl-badge.ok{color:var(--green);border:1px solid var(--green);background:rgba(0,255,136,0.08);}
+
+        /* ── EMPTY STATE ── */
+        .empty-state{
+            text-align:center;padding:30px 20px;
+            font-family:var(--font-mono);font-size:0.88rem;
+            opacity:0.35;letter-spacing:1px;
+        }
+
+        /* ── SAVE BUTTON ── */
+        .save-btn{
+            background:rgba(0,210,255,0.08);border:1px solid var(--primary);
+            color:var(--primary);padding:10px 24px;font-family:var(--font-hud);
+            font-size:0.72rem;letter-spacing:3px;cursor:pointer;transition:all 0.2s;
+        }
+        .save-btn:hover{background:rgba(0,210,255,0.2);box-shadow:0 0 14px var(--glow);}
+        .save-status{font-family:var(--font-mono);font-size:0.74rem;color:var(--green);margin-left:12px;opacity:0;transition:opacity 0.3s;}
+        .save-status.visible{opacity:1;}
+
+        /* ── N8N STATUS ── */
+        .n8n-status{
+            display:flex;align-items:center;gap:8px;
+            font-family:var(--font-mono);font-size:0.74rem;padding:8px 14px;
+            border:1px solid var(--border);background:rgba(0,10,25,0.7);
+        }
+        .n8n-dot{width:7px;height:7px;border-radius:50%;}
+        .n8n-dot.connected{background:var(--green);box-shadow:0 0 6px var(--green);}
+        .n8n-dot.disconnected{background:var(--red);}
+    </style>
+</head>
+<body>
+<div class="page-wrap">
+
+    <!-- HEADER -->
+    <div class="brief-header">
+        <div class="brief-header-left">
+            <a href="index.html" class="back-btn">← BACK TO HUD</a>
+            <div>
+                <div class="brief-title">◈ DAILY BRIEF</div>
+                <div class="brief-date-display" id="display-date">Loading...</div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <div class="n8n-status" id="n8n-status">
+                <div class="n8n-dot disconnected" id="n8n-dot"></div>
+                <span id="n8n-label">n8n: CHECKING...</span>
+            </div>
+            <div class="date-nav">
+                <button onclick="changeDate(-1)">◀ PREV</button>
+                <input type="date" id="date-picker" onchange="loadBriefForDate(this.value)">
+                <button onclick="changeDate(1)">NEXT ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: MORNING BRIEF -->
+    <div class="section-card" id="brief-card">
+        <div class="section-header">
+            <div class="section-title-row">
+                <span class="section-icon">☀</span>
+                <span class="section-title">MORNING BRIEF</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <button class="edit-btn" id="brief-edit-btn" onclick="toggleBriefEdit()">✎ EDIT</button>
+                <button class="save-btn" onclick="saveBrief()" style="padding:6px 16px;font-size:0.65rem;">SAVE</button>
+                <span class="save-status" id="brief-save-status">✓ SAVED</span>
+            </div>
+        </div>
+        <div class="brief-text-display empty" id="brief-display">No brief for this day yet. Say "morning brief" to Jarvis or type one below.</div>
+        <textarea class="brief-textarea" id="brief-textarea" placeholder="Type or paste morning brief here..."></textarea>
+    </div>
+
+    <!-- SECTION 2: THINGS TO DO (no deadline) -->
+    <div class="section-card todos" id="todos-card">
+        <div class="section-header">
+            <div class="section-title-row">
+                <span class="section-icon">📋</span>
+                <span class="section-title">THINGS TO DO</span>
+                <span class="section-count" id="todos-count">0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);">No deadline — desires &amp; intentions</span>
+                <button class="edit-btn" id="todos-edit-btn" onclick="toggleTodosEdit()">✎ EDIT</button>
+            </div>
+        </div>
+        <div class="goals-list" id="todos-list"></div>
+        <div class="add-item-row" id="todos-add-row" style="display:none;">
+            <input type="text" class="add-input" id="todos-input" placeholder="Add something to do..." onkeydown="if(event.key==='Enter') addTodo()">
+            <button class="add-btn" onclick="addTodo()">+ ADD</button>
+        </div>
+    </div>
+
+    <!-- SECTION 3: THINGS TO COMPLETE (with deadlines) -->
+    <div class="section-card deadlines" id="deadlines-card">
+        <div class="section-header">
+            <div class="section-title-row">
+                <span class="section-icon">⏱</span>
+                <span class="section-title">THINGS TO COMPLETE</span>
+                <span class="section-count" id="deadlines-count">0</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);">With deadlines</span>
+                <button class="edit-btn" id="deadlines-edit-btn" onclick="toggleDeadlinesEdit()">✎ EDIT</button>
+            </div>
+        </div>
+        <div id="deadlines-list"></div>
+        <div class="add-item-row" id="deadlines-add-row" style="display:none;">
+            <input type="text" class="add-input" id="deadline-title-input" placeholder="Project or task name..." style="flex:2">
+            <input type="date" class="add-input" id="deadline-date-input" style="flex:1">
+            <button class="add-btn" onclick="addDeadlineItem()">+ ADD</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// BRIEF PAGE — Data Engine
+// Storage: localStorage brief_storage + jarvis_deadlines
+// ══════════════════════════════════════════════════════════
+
+let currentDate = new Date().toISOString().split('T')[0];
+let editingBrief   = false;
+let editingTodos   = false;
+let editingDeadlines = false;
+
+// ── Storage helpers ──
+function loadStorage() {
+    try { return JSON.parse(localStorage.getItem('jarvis_brief_storage') || '{"briefs":{},"todos":[]}'); }
+    catch { return { briefs:{}, todos:[] }; }
+}
+function saveStorage(data) {
+    localStorage.setItem('jarvis_brief_storage', JSON.stringify(data));
+}
+function loadDeadlines() {
+    try { return JSON.parse(localStorage.getItem('jarvis_deadlines') || '[]'); }
+    catch { return []; }
+}
+function saveDeadlines(data) {
+    localStorage.setItem('jarvis_deadlines', JSON.stringify(data));
+}
+
+// ── Also pull from brief_storage.json via backend if connected ──
+const WS = new WebSocket('ws://localhost:8765');
+WS.onopen = () => console.log('[ WS ] Brief page connected');
+WS.onerror = () => {};
+WS.onmessage = (e) => {
+    try {
+        const data = JSON.parse(e.data);
+        if (data.type === 'brief_data') mergeBriefFromBackend(data);
+    } catch {}
+};
+
+function mergeBriefFromBackend(data) {
+    // Backend sends brief text and goals — merge into localStorage
+    const storage = loadStorage();
+    const dateKey = data.date || currentDate;
+    if (!storage.briefs[dateKey]) storage.briefs[dateKey] = {};
+    if (data.brief_text) storage.briefs[dateKey].brief_text = data.brief_text;
+    if (data.goals)      storage.briefs[dateKey].goals = (storage.briefs[dateKey].goals || []).concat(data.goals.filter(g => !storage.briefs[dateKey].goals?.includes(g)));
+    if (data.todos)      storage.todos = [...new Set([...(storage.todos||[]), ...data.todos])];
+    saveStorage(storage);
+    renderAll();
+}
+
+// ── Date nav ──
+function changeDate(delta) {
+    const d = new Date(currentDate);
+    d.setDate(d.getDate() + delta);
+    currentDate = d.toISOString().split('T')[0];
+    document.getElementById('date-picker').value = currentDate;
+    renderAll();
+}
+function loadBriefForDate(dateStr) {
+    currentDate = dateStr;
+    renderAll();
+}
+
+// ── Render ──────────────────────────────────────────────
+function renderAll() {
+    const d = new Date(currentDate);
+    document.getElementById('display-date').textContent =
+        d.toLocaleDateString('en-IN', {weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+    document.title = `JARVIS Brief — ${currentDate}`;
+
+    renderBrief();
+    renderTodos();
+    renderDeadlines();
+}
+
+function renderBrief() {
+    const storage    = loadStorage();
+    const dayData    = storage.briefs[currentDate] || {};
+    const briefText  = dayData.brief_text || '';
+    const display    = document.getElementById('brief-display');
+    const textarea   = document.getElementById('brief-textarea');
+    if (briefText) {
+        display.textContent  = briefText;
+        display.classList.remove('empty');
+    } else {
+        display.textContent  = 'No brief for this day yet. Say "morning brief" to Jarvis or type one below.';
+        display.classList.add('empty');
+    }
+    textarea.value = briefText;
+}
+
+function toggleBriefEdit() {
+    editingBrief = !editingBrief;
+    const btn      = document.getElementById('brief-edit-btn');
+    const display  = document.getElementById('brief-display');
+    const textarea = document.getElementById('brief-textarea');
+    if (editingBrief) {
+        display.style.display  = 'none';
+        textarea.style.display = 'block';
+        textarea.focus();
+        btn.classList.add('active');
+        btn.textContent = '✓ DONE';
+    } else {
+        saveBrief();
+        display.style.display  = '';
+        textarea.style.display = 'none';
+        btn.classList.remove('active');
+        btn.textContent = '✎ EDIT';
+    }
+}
+
+function saveBrief() {
+    const storage  = loadStorage();
+    const textarea = document.getElementById('brief-textarea');
+    if (!storage.briefs[currentDate]) storage.briefs[currentDate] = {};
+    storage.briefs[currentDate].brief_text = textarea.value.trim();
+    saveStorage(storage);
+    renderBrief();
+    flashSave('brief-save-status');
+}
+
+// ── Todos ────────────────────────────────────────────────
+function renderTodos() {
+    const storage = loadStorage();
+    // Combine global todos + day-specific goals
+    const dayData  = storage.briefs[currentDate] || {};
+    const goals    = dayData.goals || [];
+    const allTodos = [...new Set([...(storage.todos || []), ...goals])].filter(Boolean);
+    const todosDone = storage.todos_done || {};
+
+    const list = document.getElementById('todos-list');
+    document.getElementById('todos-count').textContent = allTodos.length;
+
+    if (!allTodos.length) {
+        list.innerHTML = '<div class="empty-state">No tasks yet. Add things you want to do.</div>';
+        return;
+    }
+
+    list.innerHTML = allTodos.map((todo, idx) => {
+        const done = !!todosDone[todo];
+        return `
+        <div class="goal-item ${done?'done':''}" id="todo-${idx}">
+            <div class="goal-check ${done?'checked':''}" onclick="toggleTodo('${esc(todo)}')">
+                ${done?'✓':''}
+            </div>
+            <span class="goal-text" id="todo-text-${idx}">${todo}</span>
+            <input class="goal-text-input" id="todo-input-${idx}" value="${esc(todo)}"
+                   onkeydown="if(event.key==='Enter')saveTodoEdit('${esc(todo)}',${idx})"
+                   style="display:${editingTodos?'block':'none'}">
+            <div class="goal-actions" style="display:${editingTodos?'flex':'none'}">
+                <button class="goal-action-btn" onclick="saveTodoEdit('${esc(todo)}',${idx})">✓</button>
+                <button class="goal-action-btn delete" onclick="deleteTodo('${esc(todo)}')">✕</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function esc(s) { return (s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+function toggleTodo(text) {
+    const storage  = loadStorage();
+    const done     = storage.todos_done || {};
+    done[text]     = !done[text];
+    storage.todos_done = done;
+    saveStorage(storage);
+    renderTodos();
+}
+
+function addTodo() {
+    const input   = document.getElementById('todos-input');
+    const text    = input.value.trim();
+    if (!text) return;
+    const storage = loadStorage();
+    if (!storage.todos) storage.todos = [];
+    if (!storage.todos.includes(text)) storage.todos.push(text);
+    saveStorage(storage);
+    input.value = '';
+    renderTodos();
+}
+
+function deleteTodo(text) {
+    const storage  = loadStorage();
+    storage.todos  = (storage.todos || []).filter(t => t !== text);
+    // Also remove from day goals
+    Object.keys(storage.briefs).forEach(d => {
+        if (storage.briefs[d].goals) {
+            storage.briefs[d].goals = storage.briefs[d].goals.filter(g => g !== text);
+        }
+    });
+    saveStorage(storage);
+    renderTodos();
+}
+
+function saveTodoEdit(oldText, idx) {
+    const input   = document.getElementById(`todo-input-${idx}`);
+    const newText = input?.value.trim();
+    if (!newText || newText === oldText) return;
+    const storage = loadStorage();
+    storage.todos = (storage.todos || []).map(t => t === oldText ? newText : t);
+    saveStorage(storage);
+    renderTodos();
+}
+
+function toggleTodosEdit() {
+    editingTodos = !editingTodos;
+    const btn     = document.getElementById('todos-edit-btn');
+    const addRow  = document.getElementById('todos-add-row');
+    btn.classList.toggle('active', editingTodos);
+    btn.textContent    = editingTodos ? '✓ DONE' : '✎ EDIT';
+    addRow.style.display = editingTodos ? 'flex' : 'none';
+    renderTodos();
+}
+
+// ── Deadlines ────────────────────────────────────────────
+function renderDeadlines() {
+    const deadlines = loadDeadlines().filter(d => !d.done);
+    const list      = document.getElementById('deadlines-list');
+    document.getElementById('deadlines-count').textContent = deadlines.length;
+
+    if (!deadlines.length) {
+        list.innerHTML = '<div class="empty-state">No deadlines. Add tasks with due dates.</div>';
+        return;
+    }
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    list.innerHTML = deadlines
+        .sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate))
+        .map(dl => {
+            const due      = new Date(dl.dueDate); due.setHours(0,0,0,0);
+            const daysLeft = Math.ceil((due-today)/86400000);
+            let badgeClass = 'ok', badgeText = `${daysLeft}d LEFT`;
+            if (daysLeft < 0)      { badgeClass='urgent';  badgeText=`${Math.abs(daysLeft)}d OVERDUE`; }
+            else if (daysLeft <= 1){ badgeClass='urgent';  badgeText=daysLeft===0?'DUE TODAY':'DUE TOMORROW'; }
+            else if (daysLeft <= 3){ badgeClass='warning'; }
+            return `
+            <div class="deadline-item-brief">
+                <div class="goal-check" style="border-color:${badgeClass==='ok'?'var(--green)':'var(--red)'};margin-top:3px"
+                     onclick="completeDeadline(${dl.id})"></div>
+                <div class="dl-info">
+                    <div class="dl-title-brief">${dl.title}</div>
+                    <div class="dl-meta">
+                        <span>Due: ${dl.dueDate}</span>
+                        ${dl.created ? `<span>Created: ${dl.created.split('T')[0]}</span>` : ''}
+                    </div>
+                </div>
+                <div class="dl-badge ${badgeClass}">${badgeText}</div>
+                ${editingDeadlines ? `<button class="goal-action-btn delete" onclick="removeDeadline(${dl.id})">✕</button>` : ''}
+            </div>`;
+        }).join('');
+}
+
+function addDeadlineItem() {
+    const title = document.getElementById('deadline-title-input').value.trim();
+    const date  = document.getElementById('deadline-date-input').value;
+    if (!title || !date) return;
+    const deadlines = loadDeadlines();
+    deadlines.push({ id:Date.now(), title, dueDate:date, created:new Date().toISOString(), done:false });
+    saveDeadlines(deadlines);
+    document.getElementById('deadline-title-input').value = '';
+    document.getElementById('deadline-date-input').value  = '';
+    renderDeadlines();
+}
+
+function completeDeadline(id) {
+    const deadlines = loadDeadlines().map(d => d.id===id ? {...d,done:true} : d);
+    saveDeadlines(deadlines);
+    renderDeadlines();
+}
+
+function removeDeadline(id) {
+    const deadlines = loadDeadlines().filter(d => d.id!==id);
+    saveDeadlines(deadlines);
+    renderDeadlines();
+}
+
+function toggleDeadlinesEdit() {
+    editingDeadlines = !editingDeadlines;
+    const btn    = document.getElementById('deadlines-edit-btn');
+    const addRow = document.getElementById('deadlines-add-row');
+    btn.classList.toggle('active', editingDeadlines);
+    btn.textContent      = editingDeadlines ? '✓ DONE' : '✎ EDIT';
+    addRow.style.display = editingDeadlines ? 'flex' : 'none';
+    renderDeadlines();
+}
+
+function flashSave(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+}
+
+// ── n8n status check ──────────────────────────────────────
+async function checkN8N() {
+    try {
+        const r = await fetch('http://localhost:5678/healthz', {signal:AbortSignal.timeout(2000)});
+        if (r.ok) {
+            document.getElementById('n8n-dot').className   = 'n8n-dot connected';
+            document.getElementById('n8n-label').textContent = 'n8n: CONNECTED';
+            return;
+        }
+    } catch {}
+    document.getElementById('n8n-dot').className   = 'n8n-dot disconnected';
+    document.getElementById('n8n-label').textContent = 'n8n: OFFLINE';
+}
+
+// ── INIT ─────────────────────────────────────────────────
+document.getElementById('date-picker').value = currentDate;
+renderAll();
+checkN8N();
+setInterval(checkN8N, 30000);
+</script>
+</body>
+</html>

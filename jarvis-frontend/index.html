@@ -4,114 +4,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stark HUD | Jarvis AI Assistant</title>
+    <title>JARVIS v2.0 | Stark HUD</title>
     <link rel="stylesheet" href="style.css">
     <link
-        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
 </head>
 
 <body>
+
     <div class="hud-overlay">
         <div class="scanlines"></div>
         <div class="grid-bg"></div>
+        <div class="vignette"></div>
     </div>
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
 
-    <div class="container">
-        <!-- Background Elements -->
-        <div class="central-silhouette">
-            <!-- Central Arc Reactor -->
-            <div class="arc-reactor-main">
-                <div class="core"></div>
-                <div class="ring outer-ring"></div>
-                <div class="ring middle-ring"></div>
-                <div class="ring inner-ring"></div>
+    <div class="hud-grid">
+
+        <!-- ══ LEFT COLUMN ══ -->
+        <div class="col-left">
+            <!-- Clock -->
+            <div class="panel">
+                <div class="ph"><span class="dot"></span>SYSTEM TIME</div>
+                <div class="clock" id="clock">00:00:00</div>
+                <div class="date-d" id="date">APR 18</div>
+                <div class="dv"></div>
+                <div class="stats">
+                    <div class="sbar"><span>MEM</span>
+                        <div class="bg">
+                            <div class="fill" id="mem-fill" style="width:48%"></div>
+                        </div><span>48%</span>
+                    </div>
+                    <div class="sbar"><span>PWR</span>
+                        <div class="bg">
+                            <div class="fill" id="battery-fill" style="width:0%"></div>
+                        </div><span><span id="battery-level">--</span>%</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Activity Log -->
+            <div class="panel log-wrap" style="flex:1">
+                <div class="ph"><span class="dot"></span>ACTIVITY LOG</div>
+                <div class="log-list" id="log-list">
+                    <div class="log-item">[ SYS ] JARVIS v2.0 INITIALIZED</div>
+                    <div class="log-item">[ BRAIN ] DUAL-BRAIN ACTIVE</div>
+                    <div class="log-item">[ ROUTER ] SEMANTIC ROUTER READY</div>
+                </div>
+            </div>
+            <!-- Notes -->
+            <div class="panel" style="flex-shrink:0">
+                <div class="ph"><span class="dot"></span>NOTES</div>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                    <div class="note-item">— Morning brief auto at 07:30</div>
+                    <div class="note-item">— "Goodnight" for nightly recap</div>
+                    <div class="note-item">— "Check my screen" for vision</div>
+                    <div class="note-item">— Set GROQ_API_KEY for full power</div>
+                </div>
             </div>
         </div>
 
-        <header>
-            <div class="widget top-left date-time-widget">
-                <div class="widget-header">SYSTEM TIME</div>
-                <div class="clock" id="clock">19:05:05</div>
-                <div class="date" id="date">OCTOBER 21</div>
-                <div class="stats-mini">
-                    <div class="stat-bar">
-                        <span>CAPACITY: 50G</span>
-                        <div class="bar-bg">
-                            <div class="bar-fill" style="width: 62%;"></div>
+        <!-- ══ CENTER ══ -->
+        <div class="col-center">
+            <!-- Title + Brain Bar -->
+            <div class="center-top">
+                <div class="title">J.A.R.V.I.S</div>
+                <div class="subtitle">VOICE-FIRST AGENTIC OS — v2.0</div>
+                <div class="brain-bar">
+                    <div class="bi" id="brain-personal">
+                        <div class="bd pd"></div><span>PERSONAL</span><span class="bs" id="pb-state">LOCAL</span>
+                    </div>
+                    <span class="bsep">⟋</span>
+                    <div class="bi" id="brain-general">
+                        <div class="bd gd"></div><span>GENERAL</span><span class="bs" id="gb-state">GROQ</span>
+                    </div>
+                    <span class="bsep">⟋</span>
+                    <div class="bi" id="brain-router">
+                        <div class="bd rd"></div><span>ROUTER</span><span class="bs" id="rt-state">READY</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Arc Reactor -->
+            <div class="arc-wrap">
+                <div class="arc">
+                    <div class="ring or"></div>
+                    <div class="ring mr"></div>
+                    <div class="ring ir"></div>
+                    <div class="core" id="arc-core"></div>
+                </div>
+            </div>
+            <!-- Response -->
+            <div class="interact">
+                <div class="you-line" id="transcript-you"></div>
+                <div class="resp-line" id="jarvis-response">SYSTEMS ONLINE. DUAL-BRAIN ARCHITECTURE ACTIVE. AWAITING
+                    COMMAND.</div>
+                <div class="srow">
+                    <div class="sbadge" id="status-badge">STANDBY</div>
+                    <div class="abbadge" id="active-brain-badge"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ RIGHT COLUMN ══ -->
+        <div class="col-right">
+            <!-- Weather -->
+            <div class="panel rp" style="flex-shrink:0;text-align:right">
+                <div class="ph" style="justify-content:flex-end">ATMOSPHERIC <span class="dot"></span></div>
+                <div class="temp"><span id="temp-val">--</span>°C</div>
+                <div class="city" id="city-name">LOCATING...</div>
+                <div class="cond" id="condition">ANALYSING</div>
+            </div>
+            <!-- Agentic Core -->
+            <div class="panel rp ag-panel">
+                <div class="ph"><span class="dot"></span>AGENTIC CORE</div>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(this,'deadlines')">DL</button>
+                    <button class="tab" onclick="switchTab(this,'memory')">MEM</button>
+                    <button class="tab" onclick="switchTab(this,'comms')">COMMS</button>
+                </div>
+                <div class="tc active" id="tab-deadlines">
+                    <input type="text" id="dl-title" placeholder="Project name..." class="hi">
+                    <input type="date" id="dl-date" class="hi">
+                    <button class="hbtn" onclick="addDeadline()">+ ADD DEADLINE</button>
+                    <div class="dl-list" id="deadline-list">
+                        <div class="dl-item empty">No active deadlines.</div>
+                    </div>
+                </div>
+                <div class="tc" id="tab-memory">
+                    <div class="mst">
+                        <div class="msr"><span class="msl">CONVERSATIONS</span><span class="msv" id="ms-convs">0</span>
+                        </div>
+                        <div class="msr"><span class="msl">DEADLINES</span><span class="msv" id="ms-reminders">0</span>
+                        </div>
+                        <div class="msr"><span class="msl">TASKS</span><span class="msv" id="ms-tasks">--</span></div>
+                    </div>
+                    <div class="dv"></div>
+                    <button class="hbtn" onclick="openMemoryBrowser()" style="margin-top:4px">◈ MEMORY BROWSER</button>
+                    <button class="hbtn" onclick="requestMemory()" style="margin-top:4px">REFRESH STATS</button>
+                </div>
+                <div class="tc" id="tab-comms">
+                    <div class="cgrid">
+                        <div class="ci" onclick="sendQuickCmd('open gmail')">
+                            <div class="ci-icon">✉</div><span>GMAIL</span>
+                        </div>
+                        <div class="ci" onclick="sendQuickCmd('open github')">
+                            <div class="ci-icon">⌥</div><span>GITHUB</span>
+                        </div>
+                        <div class="ci" onclick="sendQuickCmd('open whatsapp web')">
+                            <div class="ci-icon">◎</div><span>WHATSAPP</span>
+                        </div>
+                        <div class="ci" onclick="sendQuickCmd('open instagram')">
+                            <div class="ci-icon">◈</div><span>INSTAGRAM</span>
+                        </div>
+                        <div class="ci" onclick="sendQuickCmd('open netflix')">
+                            <div class="ci-icon">▶</div><span>NETFLIX</span>
+                        </div>
+                        <div class="ci" onclick="sendQuickCmd('open spotify')">
+                            <div class="ci-icon">♫</div><span>SPOTIFY</span>
                         </div>
                     </div>
-                    <div class="stat-bar power-stat">
-                        <span>POWER: <span id="battery-level">--</span>%</span>
-                        <div class="bar-bg">
-                            <div class="bar-fill" id="battery-fill" style="width: 0%;"></div>
-                        </div>
-                    </div>
                 </div>
             </div>
+        </div>
 
-            <div class="widget top-right weather-widget">
-                <div class="widget-header">ATMOSPHERIC ANALYSIS</div>
-                <div class="weather-data">
-                    <div class="temp"><span id="temp-val">24</span>°C</div>
-                    <div class="city">MALIBU, CA</div>
-                    <div class="condition">CLEAR SKIES</div>
-                </div>
-            </div>
-
-            <button id="theme-toggle" class="theme-btn">SWITCH PROTOCOL</button>
-        </header>
-
-        <main>
-            <!-- Interaction Area -->
-            <div class="interaction-area">
-                <div class="transcript-box" id="transcript-box">
-                    <div class="transcript-line" id="transcript-you"></div>
-                    <div class="response-line" id="jarvis-response">SYSTEMS ONLINE. AWAITING COMMAND.</div>
-                </div>
-                <div class="status-badge" id="status-badge">STANDBY</div>
-                <div class="log-list" id="log-list" style="display:none"></div>
-            </div>
-
-            <div class="widget bottom-right notes-widget">
-                    <div class="widget-header">NOTES</div>
-                    <div class="notes-content">
-                        <ul>
-                            <li>- mail nick fury</li>
-                            <li>- beer party with rap and thor</li>
-                            <li>- stark expo board meet</li>
-                            <li>- richards and sue dinner</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="widget activity-log-widget">
-                    <div class="widget-header">ACTIVITY LOG</div>
-                    <div class="log-list">
-                        <div class="log-item">[ SYS ] JARVIS INITIALIZED</div>
-                        <div class="log-item">[ MURF ] VOICE ENGINE READY</div>
-                        <div class="log-item">[ AI ] OLLAMA ONLINE</div>
-                    </div>
-                </div>
-
-                <div class="widget bottom-left comms-widget">
-                    <div class="widget-header">COMMUNICATION</div>
-                    <div class="comms-icons">
-                        <span class="icon">GMAIL</span>
-                        <span class="icon">WIKIPEDIA</span>
-                        <span class="icon">GITHUB</span>
-                    </div>
-                </div>
-        </main>
-
-        <footer class="hud-footer">
-            <div class="command-bar">
-                <div class="search-container">
-                    <input type="text" id="command-input" placeholder="ENTER COMMAND OR TYPE TO JARVIS..."
+        <!-- ══ FOOTER ══ -->
+        <div class="col-foot">
+            <div class="cmd-bar">
+                <div class="cmd-wrap">
+                    <span class="cmd-pfx">▷</span>
+                    <input type="text" id="command-input" placeholder="ENTER COMMAND OR SPEAK TO JARVIS..."
                         autocomplete="off">
                 </div>
-                <button id="bottom-speak-btn" class="speak-btn-glow">
-                    <svg viewBox="0 0 24 24" width="20" height="20">
+                <button id="bottom-speak-btn" class="spk-btn">
+                    <svg viewBox="0 0 24 24" width="15" height="15">
                         <path fill="currentColor"
                             d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
                         <path fill="currentColor"
@@ -119,15 +187,80 @@
                     </svg>
                     <span>SPEAK</span>
                 </button>
+                <button class="ic-btn" onclick="sendMorningBrief()">☀ BRIEF</button>
+                <button class="ic-btn" onclick="openMemoryBrowser()">◈ MEMORY</button>
+                <button class="ic-btn" id="theme-toggle">⟳ PROTOCOL</button>
             </div>
-            <div class="footer-stats">
-                <span>LATENCY: 42ms</span>
-                <span>SIGNAL: EXCELLENT</span>
-                <span>DEEPGRAM | GEMINI | MURF.AI</span>
+            <div class="fstats">
+                <span id="ws-status">WS: CONNECTING...</span>
+                <span>LATENCY: <span id="latency-val">--</span>ms</span>
+                <span id="last-brain-used">BRAIN: --</span>
+                <span>JARVIS v2.0 | DUAL-BRAIN</span>
             </div>
-        </footer>
+        </div>
+
     </div>
-    <script src="https://unpkg.com/@deepgram/sdk"></script>
+
+    <!-- ══ MEMORY MODAL ══ -->
+    <div class="mmmodal" id="memory-modal">
+        <div class="mmhdr">
+            <div class="mmtitle">◈ JARVIS MEMORY ARCHIVE</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <div class="mmsearch" style="padding:0;border:none;background:transparent;">
+                    <input type="text" id="memory-search-input" placeholder="SEARCH..."
+                        style="min-width:160px;max-width:280px">
+                </div>
+                <button class="mmclose" onclick="closeMemoryBrowser()">✕ CLOSE</button>
+            </div>
+        </div>
+        <div class="mmbody">
+            <div class="mmsidebar">
+                <div class="mmstitle">FOLDERS</div>
+                <div class="efold active" onclick="filterByEmotion('all')" id="ef-all"><span class="efi">◉</span><span
+                        class="efl">ALL</span><span class="efc" id="count-all">0</span></div>
+                <div class="efold ef-general" onclick="filterByEmotion('general')" id="ef-general"><span
+                        class="efi">💡</span><span class="efl">GENERAL</span><span class="efc"
+                        id="count-general">0</span></div>
+                <div
+                    style="padding:5px 10px 3px;font-size:0.58rem;letter-spacing:2px;opacity:0.3;font-family:var(--fh)">
+                    PERSONAL</div>
+                <div class="efold ef-happy" onclick="filterByEmotion('happy')" id="ef-happy"><span
+                        class="efi">😊</span><span class="efl">HAPPY</span><span class="efc" id="count-happy">0</span>
+                </div>
+                <div class="efold ef-sad" onclick="filterByEmotion('sad')" id="ef-sad"><span class="efi">💧</span><span
+                        class="efl">SAD</span><span class="efc" id="count-sad">0</span></div>
+                <div class="efold ef-angry" onclick="filterByEmotion('angry')" id="ef-angry"><span
+                        class="efi">🔥</span><span class="efl">ANGRY</span><span class="efc" id="count-angry">0</span>
+                </div>
+                <div class="efold ef-anxious" onclick="filterByEmotion('anxious')" id="ef-anxious"><span
+                        class="efi">⚡</span><span class="efl">ANXIOUS</span><span class="efc"
+                        id="count-anxious">0</span></div>
+                <div class="efold ef-motivated" onclick="filterByEmotion('motivated')" id="ef-motivated"><span
+                        class="efi">🚀</span><span class="efl">MOTIVATED</span><span class="efc"
+                        id="count-motivated">0</span></div>
+                <div class="efold ef-betrayal" onclick="filterByEmotion('betrayal')" id="ef-betrayal"><span
+                        class="efi">🗡</span><span class="efl">BETRAYAL</span><span class="efc"
+                        id="count-betrayal">0</span></div>
+                <div class="efold ef-love" onclick="filterByEmotion('love')" id="ef-love"><span
+                        class="efi">💜</span><span class="efl">LOVE</span><span class="efc" id="count-love">0</span>
+                </div>
+                <div class="efold ef-neutral" onclick="filterByEmotion('neutral')" id="ef-neutral"><span
+                        class="efi">◎</span><span class="efl">NEUTRAL</span><span class="efc"
+                        id="count-neutral">0</span></div>
+            </div>
+            <div class="mmclist">
+                <div class="mmct" id="conv-list-title">ALL CONVERSATIONS</div>
+                <div id="conv-cards-container">
+                    <div style="opacity:0.4;text-align:center;padding:20px;font-family:var(--fm);font-size:0.72rem;">No
+                        conversations yet.</div>
+                </div>
+            </div>
+            <div class="mmdetail" id="conv-detail">
+                <div class="detempty">SELECT A CONVERSATION</div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 

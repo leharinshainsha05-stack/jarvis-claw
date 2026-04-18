@@ -1,0 +1,24 @@
+# ══════════════════════════════════════════════
+# JARVIS v2.0 — Python Dependencies
+# Install: pip install -r requirements.txt
+# ══════════════════════════════════════════════
+
+# ── v1 Core (already in your venv) ──
+pyttsx3
+SpeechRecognition
+sounddevice
+numpy
+pyautogui
+pyperclip
+websockets
+
+# ── v2 AI / Brain ──
+sentence-transformers
+groq
+chromadb
+langdetect
+
+# ── v2 Agentic Integrations ──
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
