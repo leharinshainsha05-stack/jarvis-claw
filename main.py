@@ -71,6 +71,8 @@ from memory.sqlite_memory import SQLiteMemory
 from utils.screen_vision import ScreenVision
 from utils.language_detect import LanguageDetector
 from utils.logger import JarvisLogger
+from dotenv import load_dotenv
+load_dotenv()
 
 # =============================================================================
 # CONFIGURATION
@@ -82,23 +84,23 @@ CONFIG = {
     "assistant_name": "Jarvis",
 
     # Files & Paths
-    "memory_file"   : "memory.json",           # v1 JSON (kept for compatibility)
-    "db_file"       : "jarvis_memory.db",      # v2 SQLite
-    "vector_db_path": "./chroma_db",           # v2 ChromaDB (personal brain)
-    "audio_path"    : r"E:\jarvis-claw\murf_output.mp3",
+    "memory_file"   : "memory.json",
+    "db_file"       : "jarvis_memory.db",
+    "vector_db_path": "./chroma_db",
+    "audio_path"    : os.environ.get("AUDIO_PATH", r"E:\jarvis-claw\murf_output.mp3"),
 
     # Voice
-    "murf_api_key"  : "ap2_0fca7091-a9f0-4131-9c6b-b6a654bc1063",
-    "murf_voice_id" : "en-IN-rohan",
+    "murf_api_key"  : os.environ.get("MURF_API_KEY", ""),
+    "murf_voice_id" : os.environ.get("MURF_VOICE_ID", "en-IN-rohan"),
 
     # Email
-    "email_address" : "leharinshainsha05@gmail.com",
-    "email_password": "tgkp ofqn iktw xolf",
+    "email_address" : os.environ.get("EMAIL_ADDRESS", ""),
+    "email_password": os.environ.get("EMAIL_PASSWORD", ""),
 
     # AI Models
-    "personal_model" : "gemma3:1b",            # v1: local Ollama (kept)
-    "general_model"  : "llama3-70b-8192",      # v2: Groq API
-    "groq_api_key"   : os.environ.get("GROQ_API_KEY", ""),  # set env var
+    "personal_model" : "gemma3:1b",
+    "general_model"  : "llama3-70b-8192",
+    "groq_api_key"   : os.environ.get("GROQ_API_KEY", ""),
 
     # Behaviour
     "max_chat_history"      : 20,
