@@ -1,53 +1,84 @@
-# JARVIS — Just A Rather Very Intelligent System
-> Built for the Murf.ai Hackathon 2025
+---
 
-## Problem Statement
-Current voice assistants like Siri or Alexa are fundamentally limited — they can search the web or set timers, but they cannot execute complex, multi-step workflows on a user's local machine. For developers and power users, switching contexts between typing code, running terminal commands, and reading documentation breaks their flow state and slows down productivity.
+## ✨ Features
 
-## Solution
-JARVIS is a fully voice-controlled AI desktop assistant that eliminates context switching entirely. Instead of stopping your work to open apps, type commands, or click through menus — you simply speak, and JARVIS executes the workflow on your local machine instantly.
+### 🎙️ Voice & Wake Word
+- Say **"Hey Jarvis"** anywhere → Jarvis wakes up instantly
+- Inline commands: *"Hey Jarvis open YouTube"* in one breath
+- Tkinter overlay with live status + brain indicator
 
-A developer deep in code can say *"send message to teammate saying I pushed the fix"* — JARVIS opens WhatsApp, finds the contact, types the message, and sends it. Without the developer ever leaving their editor.
+### 🧠 Dual-Brain Routing
+- Every input → **Semantic Router** (sentence-transformer embeddings)
+- Emotional/personal queries → **Personal Brain** (local Ollama + ChromaDB)
+- Technical/general queries → **General Brain** (Groq Llama 3 70B → HTTP fallback → local Ollama)
 
-The key innovation is the **speak → think → act → respond** pipeline:
-- You speak a command into the Stark HUD browser interface
-- The frontend sends it to the Python backend via WebSocket in real time
-- The backend executes the actual workflow on the local machine
-- Murf.ai's natural human voice speaks the response back — not robotic TTS, but a warm intelligent voice that feels like a real assistant
+### ⚡ Commands (v1 Core)
+| Command | Action |
+|---------|--------|
+| `play [song]` | Opens Spotify |
+| `youtube [query]` | Opens Edge browser |
+| `search google for [query]` | Google search |
+| `open [site]` | Instagram, Gmail, GitHub, Netflix, Amazon, Flipkart, Spotify |
+| `send message to [name] saying [text]` | WhatsApp with confirmation gate |
+| `call [name]` / `video call [name]` | WhatsApp call |
+| `email to [address] subject [x] body [y]` | Gmail SMTP |
+| `remind me in [n] minutes to [task]` | Local reminder |
+| `shutdown` / `restart` / `sleep` / `cancel` | System control |
+| `time` / `date` | Current time/date |
 
-The AI brain runs on **Ollama + Gemma3 completely offline** — no API limits, no internet dependency. JARVIS remembers past commands and conversations, so context is never lost between sessions.
+### 🤖 Autonomous Action Agent (v2)
+| Command | Action |
+|---------|--------|
+| `book train ticket` | Opens IRCTC, asks from/to/date, fills details |
+| `book flight` | MakeMyTrip automation |
+| `book cab` | Uber automation |
+| `order food` | Swiggy/Zomato automation |
+| `edit video` | Finds CapCut/DaVinci on PC, opens + guides |
+| `pay bill` | PhonePe automation |
+| `recharge phone` | Paytm automation |
+| `buy on amazon/flipkart` | Searches with your item |
 
-The result is **zero context switching**. The developer stays in flow. JARVIS handles everything else.
+### 💜 Personal Brain
+- **ChromaDB** vector store — stores every personal conversation
+- Sentiment tagging: `Happy` `Sad` `Angry` `Anxious` `Motivated` `Betrayal` `Love` `Neutral`
+- Emotional continuity — references past conversations naturally
+- **100% local** — zero data leaves your device
 
-## How It Works
-1. User speaks or types a command in the Stark HUD browser interface
-2. Frontend sends command to Python backend via WebSocket
-3. Backend processes the command and executes it on the local machine
-4. Murf.ai converts the response to natural human voice and speaks it back
+### ⚡ General Brain
+- **Groq API** (Llama 3 70B) — GPT-4 level reasoning
+- **Self-Correction Loop** — 3 retry attempts for code debugging
+- Falls back to local **Ollama** if Groq is offline
 
-## Features
-- 🔊 **Murf.ai Voice** — Natural human voice output for every response
-- 🎤 **Voice Input** — Speak commands via microphone
-- 🤖 **Ollama AI** — Offline AI brain using Gemma3 for intelligent conversations
-- 📱 **WhatsApp Automation** — Send messages and make voice/video calls
-- 🌐 **Web Control** — Open YouTube, Google, Instagram, Gmail and more
-- 📧 **Email** — Send emails via Gmail
-- ⏰ **Reminders** — Set timed reminders
-- 💻 **PC Control** — Shutdown, restart, sleep
-- 🧠 **Memory** — Remembers past commands and conversations
-- 🎨 **Stark HUD** — Iron Man inspired browser interface
+### 🌅 Agentic Core
+| Feature | Description |
+|---------|-------------|
+| **Morning Brief** | Greeting + nightly goals + calendar + deadlines + GitHub alerts + motivator |
+| **Nightly Recap** | Triggered by "goodnight" — recaps today, collects tomorrow's goals |
+| **Deadline Manager** | Proactive alerts every minute — 3 days / 1 day / overdue |
+| **CrewAI Orchestrator** | Planner → Executor → Reviewer three-agent pipeline |
 
-## Tech Stack
-| Component | Technology |
-|-----------|------------|
-| Voice Output | Murf.ai API — Natural human voice output |
-| Voice Input | Web Speech API + SoundDevice + SpeechRecognition |
-| AI Brain | Ollama + Gemma3:1b (offline) |
-| Backend | Python, WebSockets, PyAutoGUI, PyPerClip, smtplib, pyttsx3 |
-| Frontend | HTML5, CSS3, JavaScript |
-| Communication | WebSockets — Real-time frontend-backend |
-| Automation | PyAutoGUI, PyPerClip, WhatsApp Desktop |
-| APIs & Services | Open-Meteo API, Nominatim API, Battery API |
-| Tools | Git + GitHub, PowerShell, JSON |
+### 👁️ Screen Vision
+- Say **"check my screen"** → screenshot → LLaVA analyzes → speaks result
+- Proactive error detection — detects terminal errors automatically
 
+### 🌍 Multilingual
+- Tamil script → responds in Tamil
+- Hindi / Telugu / Malayalam / Kannada → auto-detected by Unicode block analysis
+
+### 🔗 Integrations
+- **Google Calendar** — reads your schedule (requires `credentials.json`)
+- **GitHub Monitoring** — watches CI, PRs, merge conflicts (requires `GITHUB_TOKEN`)
+- **n8n Automation** — Gmail, WhatsApp via Twilio, task creation (port 5678)
+- **Confirmation gate** on all outbound actions
+
+### 🖥️ Frontend (Stark HUD)
+- CSS Grid, fully responsive (desktop / tablet / mobile)
+- Live brain indicator — shows which brain answered
+- Activity log — every action logged in real time
+- Memory Browser — full conversation archive sorted by emotion folder
+- Brief Page (`brief.html`) — Morning Brief + Things To Do + Things To Complete
+- Deadlines panel with urgency badges
+- Date navigation for brief history
+
+---
 
