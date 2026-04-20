@@ -1,3 +1,24 @@
+
+<div>
+
+# 🤖 JARVIS v2.0
+### Voice-First Agentic Personal OS
+
+[![Python](https://img.shields.io/badge/Python-3.11-blue?style=for-the-badge&logo=python)](https://python.org)
+[![Groq](https://img.shields.io/badge/Groq-Llama3_70B-orange?style=for-the-badge)](https://groq.com)
+[![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-green?style=for-the-badge)](https://chromadb.com)
+[![CrewAI](https://img.shields.io/badge/CrewAI-Multi_Agent-purple?style=for-the-badge)](https://crewai.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
+
+> **"Not just a voice assistant — a full Agentic OS that perceives, reasons, and acts."**
+
+[Features](#-features) • [Architecture](#-architecture) • [Installation](#-installation) • [Testing](#-testing) • [Agentic Standard](#-agentic-standard)
+
+</div>
+
+---
+
+## 📸 Preview
 ---
 
 ## ✨ Features
