@@ -80,6 +80,15 @@ class PersonalBrain:
         except Exception as e:
             print(f"[ Personal Brain ] ChromaDB error: {e} — running without vector memory")
 
+    def is_available(self) -> bool:
+        """Check if local Ollama server is running and accessible."""
+        try:
+            req = urllib.request.Request("http://localhost:11434/api/tags")
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                return resp.status == 200
+        except Exception:
+            return False
+
     def _detect_sentiment(self, text: str) -> str:
         t = text.lower()
         for sentiment, keywords in SENTIMENT_TAGS.items():
@@ -193,5 +202,5 @@ class PersonalBrain:
                 result = json.loads(resp.read().decode("utf-8"))
                 return result["message"]["content"].strip()
         except Exception as e:
-            print(f"[ Personal Brain ] Ollama error: {e}")
-            return f"I'm here with you, {self.user_name}. Tell me more."
+            print(f"[ Personal Brain ] Local Ollama unavailable: {e}")
+            return (f"Personal Brain is strictly local. Local Ollama model ({self.model}) is offline. Personal data and memories remain strictly private and will never be sent to cloud services.")

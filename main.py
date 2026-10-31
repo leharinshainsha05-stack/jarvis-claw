@@ -33,7 +33,25 @@ v2 New Features:
 """
 
 import os
+import re
 import sys
+import time
+
+# ── Encoding fix (Windows cp1252 -> UTF-8, safe fallback) ──
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass  # Stream may not support reconfigure; log to file still works
+
+# ── .env auto-loading ──
+try:
+    from dotenv import load_dotenv
+    load_dotenv(override=False)  # Does NOT overwrite already-set env vars
+except ImportError:
+    pass  # python-dotenv not installed — env vars must be set manually
 import time
 import json
 import subprocess
@@ -71,8 +89,6 @@ from memory.sqlite_memory import SQLiteMemory
 from utils.screen_vision import ScreenVision
 from utils.language_detect import LanguageDetector
 from utils.logger import JarvisLogger
-from dotenv import load_dotenv
-load_dotenv()
 
 # =============================================================================
 # CONFIGURATION
@@ -408,7 +424,7 @@ def route_and_respond(user_input: str) -> tuple[str, str]:
     Returns (response_text, brain_label)
     brain_label: "PERSONAL" | "GENERAL" | "LOCAL"
     """
-    global router, personal_brain, general_brain
+    global router, personal_brain, general_brain, vault
 
     # Detect language first
     lang = "en"
@@ -495,6 +511,11 @@ def _ask_ollama_local(user_input: str, mode: str = "general") -> str:
 
     except Exception as e:
         print(f"Ollama error: {e}")
+        if mode == "personal":
+            return (
+                "Personal Brain is strictly local. Local Ollama model (gemma3:1b) is offline. "
+                "Personal data and memories remain strictly private and will never be sent to cloud services."
+            )
         return f"Sorry {CONFIG['user_name']}, I could not reach my brain right now. Is Ollama running?"
 
 
@@ -734,6 +755,126 @@ def capture_screen_and_analyze(context: str = "general") -> str:
 # COMMAND HANDLER — v1 + v2 merged
 # =============================================================================
 
+
+# =============================================================================
+# TIME / DATE & VAULT HELPERS
+# =============================================================================
+
+def _normalize_query(query: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9\s]", " ", query.lower())
+    return " ".join(cleaned.split())
+
+
+def is_time_query(query: str) -> bool:
+    normalized = _normalize_query(query)
+    direct_patterns = [
+        r"^(what|whats|tell me|can you tell me)? ?(is the)? ?(current)? ?time( please)?$",
+        r"^(what|whats|tell me|can you tell me)? ?time is it( now)?( please)?$",
+        r"^what is the current time( now)?$",
+        r"^tell me the current time( now)?$",
+        r"^current time( please)?$",
+        r"^time please$",
+        r"^time$",
+    ]
+    return any(re.match(pattern, normalized) for pattern in direct_patterns)
+
+
+def is_date_query(query: str) -> bool:
+    normalized = _normalize_query(query)
+    direct_patterns = [
+        r"^(what|whats|tell me|can you tell me)? ?(is the)? ?(today s|todays|current)? ?date( today)?( please)?$",
+        r"^what date is it( today)?( please)?$",
+        r"^what is today s date$",
+        r"^tell me today s date$",
+        r"^today s date( please)?$",
+        r"^date please$",
+        r"^date$",
+    ]
+    return any(re.match(pattern, normalized) for pattern in direct_patterns)
+
+
+def handle_vault_command(cmd: str) -> tuple[str, str] | None:
+    """
+    Evaluates financial and vault queries locally via deterministic Python logic.
+    Returns (response_text, decision_label) or None if query is not financial.
+    """
+    global vault
+    if not vault:
+        return None
+
+    c = cmd.lower().strip()
+
+    # 1. Status / Balance queries
+    status_triggers = [
+        "vault", "vault status", "vault balance", "safe to spend",
+        "how much can i spend", "check my balance", "what is my balance",
+        "my allocations", "show allocations", "financial status"
+    ]
+    if c in status_triggers or any(c.startswith(t) for t in ["vault status", "how much can i spend", "safe to spend"]):
+        s = vault.get_balance_summary()
+        alloc_text = ""
+        if s["allocations"]:
+            items = [f"{a['category']} (₹{a['amount_rupees']:,.0f}, {a['status']})" for a in s["allocations"]]
+            alloc_text = " Allocations: " + ", ".join(items) + "."
+        reply = (
+            f"Vault status: Total funds are ₹{s['total_funds_rupees']:,.2f}. "
+            f"Protected allocations: ₹{s['total_allocated_rupees']:,.2f} "
+            f"(Locked: ₹{s['locked_rupees']:,.2f}, Earmarked: ₹{s['earmarked_rupees']:,.2f}). "
+            f"Safe to spend is ₹{s['safe_to_spend_rupees']:,.2f}.{alloc_text}"
+        )
+        return (reply, "VAULT_INFO")
+
+    # 2. Deposit / Add funds
+    m_dep = re.search(r"(?:add\s+funds|add\s+income|deposit)\s+(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)(?:\s+(?:from|source)\s+([a-zA-Z0-9_]+))?", c)
+    if m_dep:
+        try:
+            amt = float(m_dep.group(1))
+            source = m_dep.group(2) or "user_declared"
+            res = vault.deposit(amt, source=source)
+            return (
+                f"Deposit of ₹{amt:,.2f} recorded from {source}. "
+                f"Total funds: ₹{res['total_funds_rupees']:,.2f}. "
+                f"Safe to spend: ₹{res['safe_to_spend_rupees']:,.2f}.",
+                "VAULT_ALLOW"
+            )
+        except Exception as e:
+            return (f"Failed to record deposit: {e}", "VAULT_BLOCK")
+
+    # 3. Allocations
+    m_alloc1 = re.search(r"allocate\s+(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s+(?:to|for)\s+([a-zA-Z0-9_]+)(?:\s+(locked|earmarked))?", c)
+    m_alloc2 = re.search(r"(lock|earmark)\s+(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s+(?:to|for)\s+([a-zA-Z0-9_]+)", c)
+    if m_alloc1 or m_alloc2:
+        try:
+            if m_alloc1:
+                amt = float(m_alloc1.group(1))
+                cat = m_alloc1.group(2)
+                stat = m_alloc1.group(3) or "locked"
+            else:
+                stat = "locked" if m_alloc2.group(1) == "lock" else "earmarked"
+                amt = float(m_alloc2.group(2))
+                cat = m_alloc2.group(3)
+            res = vault.allocate(cat, amt, status=stat, allow_update=True)
+            return (
+                f"Allocated ₹{amt:,.2f} to {cat} as {stat}. "
+                f"Safe to spend is now ₹{res['safe_to_spend_rupees']:,.2f}.",
+                "VAULT_ALLOW"
+            )
+        except Exception as e:
+            return (f"Allocation rejected: {e}", "VAULT_BLOCK")
+
+    # 4. Spending evaluation
+    m_spend = re.search(r"(?:can\s+i\s+(?:spend|buy)|check\s+spend(?:ing)?|spend|buy)\s+(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)(?:\s+(?:on|for)\s+([^?]+))?", c)
+    if m_spend:
+        try:
+            amt = float(m_spend.group(1))
+            merchant = (m_spend.group(2) or "purchase").strip()
+            res = vault.evaluate_spending(amt, merchant=merchant)
+            return (res["reason"], f"VAULT_{res['decision']}")
+        except Exception as e:
+            return (f"Spending check error: {e}", "VAULT_BLOCK")
+
+    return None
+
 def handle_command(cmd: str):
     global sqlite_mem
     try:
@@ -741,6 +882,33 @@ def handle_command(cmd: str):
             cmd = cmd.replace("hey jarvis", "").strip()
 
         overlay_update(status="THINKING", cmd=cmd)
+
+        # ── v2: JARVIS VAULT (FINANCIAL ALLOCATION & SPENDING PROTECTION) ─
+        vault_res = handle_vault_command(cmd)
+        if vault_res:
+            reply, decision = vault_res
+            overlay_update(brain=decision, resp=reply)
+            speak(reply)
+            overlay_hide(5000)
+            log_task("Vault", f"[{decision}] {reply[:80]}")
+            return
+
+        # ── Deterministic Time/Date Commands ─────────────────────────
+        if is_time_query(cmd):
+            t = datetime.now().strftime("%I:%M %p")
+            response = f"The current time is {t}."
+            overlay_update(brain="SYSTEM", resp=response)
+            speak(response)
+            overlay_hide(3000)
+            return
+
+        if is_date_query(cmd):
+            d = datetime.now().strftime("%A, %d %B %Y")
+            response = f"Today is {d}."
+            overlay_update(brain="SYSTEM", resp=response)
+            speak(response)
+            overlay_hide(3000)
+            return
 
         # ── v2: ACTION AGENT — check before anything else ──
         # If user says "how to book ticket" or "order food" — DO it, don't explain it
@@ -920,6 +1088,7 @@ def handle_command(cmd: str):
 # =============================================================================
 
 connected_clients = set()
+ws_event_loop = None
 
 
 async def ws_handler(websocket):
@@ -947,6 +1116,77 @@ async def ws_handler(websocket):
 
                 elif data.get("type") == "ping":
                     await websocket.send(json.dumps({"type": "pong"}))
+
+                elif data.get("type") == "health":
+                    router_mode = "keyword"
+                    if router:
+                        try:
+                            router_mode = router.get_route_info().get("mode", "keyword")
+                        except Exception:
+                            pass
+                    health_data = {
+                        "type": "health_response",
+                        "status": "ok",
+                        "backend": "online",
+                        "router_mode": router_mode,
+                        "ollama_local": "offline" if not (personal_brain and personal_brain.is_available()) else "online",
+                        "sqlite": "ready" if sqlite_mem else "offline",
+                        "vault": "active" if vault else "offline",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    await websocket.send(json.dumps(health_data))
+
+                elif data.get("type") == "vault_status":
+                    if vault:
+                        summary = vault.get_balance_summary()
+                        await websocket.send(json.dumps({"type": "vault_status_response", "status": "ok", "summary": summary}))
+                    else:
+                        await websocket.send(json.dumps({"type": "vault_status_response", "status": "error", "message": "Vault not initialized"}))
+
+                elif data.get("type") == "vault_deposit":
+                    if vault:
+                        amt = float(data.get("amount", 0))
+                        src = data.get("source", "user_declared")
+                        nts = data.get("notes", "")
+                        try:
+                            res = vault.deposit(amt, source=src, notes=nts)
+                            await websocket.send(json.dumps({"type": "vault_deposit_response", "status": "ok", "result": res}))
+                        except Exception as e:
+                            await websocket.send(json.dumps({"type": "vault_deposit_response", "status": "error", "message": str(e)}))
+                    else:
+                        await websocket.send(json.dumps({"type": "vault_deposit_response", "status": "error", "message": "Vault not initialized"}))
+
+                elif data.get("type") == "vault_allocate":
+                    if vault:
+                        cat = data.get("category", "")
+                        amt = float(data.get("amount", 0))
+                        stat = data.get("status", "earmarked")
+                        nts = data.get("notes", "")
+                        try:
+                            res = vault.allocate(cat, amt, status=stat, notes=nts, allow_update=True)
+                            await websocket.send(json.dumps({"type": "vault_allocate_response", "status": "ok", "result": res}))
+                        except Exception as e:
+                            await websocket.send(json.dumps({"type": "vault_allocate_response", "status": "error", "message": str(e)}))
+                    else:
+                        await websocket.send(json.dumps({"type": "vault_allocate_response", "status": "error", "message": "Vault not initialized"}))
+
+                elif data.get("type") == "vault_spend_check":
+                    if vault:
+                        amt = float(data.get("amount", 0))
+                        mch = data.get("merchant", "unknown")
+                        ctg = data.get("category", "general")
+                        tid = data.get("tx_id", None)
+                        res = vault.evaluate_spending(amt, merchant=mch, category=ctg, tx_id=tid)
+                        await websocket.send(json.dumps({
+                            "type": "vault_spend_check_response",
+                            "status": "ok",
+                            "decision": res["decision"],
+                            "allowed": res["allowed"],
+                            "reason": res["reason"],
+                            "safe_to_spend_rupees": res["safe_to_spend_rupees"]
+                        }))
+                    else:
+                        await websocket.send(json.dumps({"type": "vault_spend_check_response", "status": "error", "message": "Vault not initialized"}))
 
                 elif data.get("type") == "memory_request":
                     summary = load_memory_summary()
@@ -989,6 +1229,14 @@ def process_command_ws_v2(command: str) -> tuple[str, str]:
         if not cmd:
             return (f"Yes {CONFIG['user_name']}, how can I help?", "SYSTEM")
 
+        # ── VAULT FINANCIAL ALLOCATION & SPENDING PROTECTION ─────────
+        vault_res = handle_vault_command(cmd)
+        if vault_res:
+            reply, brain_label = vault_res
+            threading.Thread(target=speak, args=(reply,), daemon=True).start()
+            log_task("Vault", f"[{brain_label}] {reply[:60]}")
+            return (reply, brain_label)
+
         # v2: Action Agent — autonomous task execution
         if action_agent:
             action_intent = action_agent.detect_action_intent(cmd)
@@ -1026,13 +1274,17 @@ def process_command_ws_v2(command: str) -> tuple[str, str]:
             open_website(site)
             return (f"Opening {site}.", "SYSTEM")
 
-        elif "time" in cmd:
+        elif is_time_query(cmd):
             t = datetime.now().strftime("%I:%M %p")
-            return (f"The current time is {t}.", "SYSTEM")
+            response = f"The current time is {t}."
+            threading.Thread(target=speak, args=(response,), daemon=True).start()
+            return (response, "SYSTEM")
 
-        elif "date" in cmd or "today" in cmd:
+        elif is_date_query(cmd):
             d = datetime.now().strftime("%A, %d %B %Y")
-            return (f"Today is {d}.", "SYSTEM")
+            response = f"Today is {d}."
+            threading.Thread(target=speak, args=(response,), daemon=True).start()
+            return (response, "SYSTEM")
 
         elif ("send message to" in cmd or "send a message to" in cmd) and "saying" in cmd:
             after_to  = cmd.split("send message to", 1)[1] if "send message to" in cmd else cmd.split("send a message to", 1)[1]
@@ -1082,6 +1334,8 @@ def process_command_ws_v2(command: str) -> tuple[str, str]:
 
 
 async def start_ws_server():
+    global ws_event_loop
+    ws_event_loop = asyncio.get_running_loop()
     async with websockets.serve(ws_handler, "localhost", CONFIG["ws_port"]):
         print(f"[ WS ] WebSocket server running on ws://localhost:{CONFIG['ws_port']}")
         await asyncio.Future()
@@ -1122,7 +1376,12 @@ def agentic_scheduler():
 
 def ws_broadcast_sync(data):
     """Sync wrapper for ws broadcast from non-async thread."""
-    pass  # handled by frontend poll via WS if connected
+    global ws_event_loop
+    if ws_event_loop and ws_event_loop.is_running() and connected_clients:
+        try:
+            asyncio.run_coroutine_threadsafe(ws_broadcast(data), ws_event_loop)
+        except Exception as e:
+            print(f"[ WS ] Broadcast error: {e}")
 
 
 # =============================================================================
@@ -1252,6 +1511,13 @@ def init_v2_components():
     except Exception as e:
         print(f"[ v2 ] n8n init failed: {e}")
 
+    try:
+        from memory.vault import JarvisVault
+        vault = JarvisVault(CONFIG["db_file"])
+        print("[ v2 ] ✓ Jarvis Vault ready (Financial Protection Active)")
+    except Exception as e:
+        print(f"[ v2 ] Vault init failed: {e}")
+
     print("[ v2 ] Initialization complete.\n")
 
 
@@ -1259,25 +1525,15 @@ def init_v2_components():
 # MAIN LOOP
 # =============================================================================
 
-def jarvis_loop():
-    # Start WebSocket server
-    ws_thread = threading.Thread(target=run_ws_server, daemon=True)
-    ws_thread.start()
-    print(f"[ WS ] WebSocket server started on ws://localhost:{CONFIG['ws_port']}")
-
-    # Start agentic scheduler
-    agentic_thread = threading.Thread(target=agentic_scheduler, daemon=True)
-    agentic_thread.start()
-    print("[ AGENTIC ] Scheduler started")
-
-    speak(f"Jarvis v2.0 is online, {CONFIG['user_name']}. Dual-brain architecture active.")
-    print("=" * 60)
-    print(f"👂 Say 'Hey Jarvis' anytime to wake me up!")
-    print("=" * 60)
-
+def jarvis_voice_loop():
+    """Background voice interaction loop - resilient to microphone disconnects."""
+    mic_warned = False
     while True:
         try:
             wake_detected, inline_cmd = listen_for_wake_word()
+            if mic_warned:
+                print("[ Voice ] Microphone reconnected and active.")
+                mic_warned = False
 
             if wake_detected:
                 overlay_show(status="LISTENING", cmd=inline_cmd if inline_cmd else "")
@@ -1303,11 +1559,20 @@ def jarvis_loop():
                         overlay_hide(2000)
 
         except KeyboardInterrupt:
-            speak(f"Shutting down Jarvis. Goodbye {CONFIG['user_name']}.")
+            speak(f"Shutting down Jarvis voice loop.")
             break
         except Exception as e:
-            print(f"Main loop error: {e}")
-            time.sleep(1)
+            if not mic_warned:
+                print(f"[ Voice ] Microphone not available or busy ({e}). Voice loop paused; WebSocket & UI remain active.")
+                mic_warned = True
+            time.sleep(3)
+
+
+def jarvis_loop():
+    """Legacy entry point - launches decoupled components."""
+    voice_thread = threading.Thread(target=jarvis_voice_loop, daemon=True)
+    voice_thread.start()
+    voice_thread.join()
 
 
 def main():
@@ -1316,13 +1581,36 @@ def main():
     # Initialize v2 components first (non-blocking — failures are graceful)
     init_v2_components()
 
-    # Start Jarvis voice loop in background
-    jarvis_thread = threading.Thread(target=jarvis_loop, daemon=True)
-    jarvis_thread.start()
+    # 1. Start WebSocket server independently
+    ws_thread = threading.Thread(target=run_ws_server, daemon=True)
+    ws_thread.start()
+    print(f"[ WS ] WebSocket server started on ws://localhost:{CONFIG['ws_port']}")
 
-    # Run Tkinter overlay on main thread (required)
-    overlay = JarvisOverlay()
-    overlay.run()
+    # 2. Start agentic scheduler independently
+    agentic_thread = threading.Thread(target=agentic_scheduler, daemon=True)
+    agentic_thread.start()
+    print("[ AGENTIC ] Scheduler started")
+
+    # 3. Start voice interaction loop in background
+    voice_thread = threading.Thread(target=jarvis_voice_loop, daemon=True)
+    voice_thread.start()
+
+    speak(f"Jarvis v2.0 is online, {CONFIG['user_name']}. Dual-brain architecture active.")
+    print("=" * 60)
+    print("👂 Say 'Hey Jarvis' anytime to wake me up!")
+    print("=" * 60)
+
+    # 4. Run Tkinter overlay on main thread with headless fallback
+    try:
+        overlay = JarvisOverlay()
+        overlay.run()
+    except Exception as e:
+        print(f"[ UI ] GUI overlay unavailable ({e}). Running in headless console mode.")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("[ System ] Shutdown requested. Exiting.")
 
 
 if __name__ == "__main__":

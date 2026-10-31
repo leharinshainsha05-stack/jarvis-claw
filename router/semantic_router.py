@@ -5,7 +5,18 @@ FIXED: Personal routing now correctly catches emotional inputs.
 Added Tamil emotional phrases. Lowered threshold for personal detection.
 """
 from __future__ import annotations
+import os
 import re
+import sys
+
+# Encoding fix for Windows console
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 PERSONAL_EXAMPLES = [
     # Core emotional statements - these MUST route to personal
@@ -88,6 +99,11 @@ GENERAL_EXAMPLES = [
 
 # Direct keyword triggers for personal — bypasses embedding
 PERSONAL_TRIGGERS = [
+    # Day reflection — these are ALWAYS personal
+    "my day", "today was", "today i", "yesterday i", "i had a",
+    "it was a", "my day went", "day was good", "day was bad",
+    "day went well", "good day", "bad day", "rough day", "tough day",
+    "i went to", "i met", "i saw", "i talked to",
     "i am sad", "i feel sad", "i'm sad",
     "i am happy", "i feel happy", "i'm happy",
     "i am angry", "i feel angry", "i'm angry",
@@ -128,17 +144,31 @@ class SemanticRouter:
             from sentence_transformers import SentenceTransformer
             import numpy as np
             self._np    = np
-            self._model = SentenceTransformer("all-MiniLM-L6-v2")
+            # Prefer local cached model to prevent network stalls and offline issues
+            os.environ.setdefault("HF_HUB_OFFLINE", "1")
+            try:
+                self._model = SentenceTransformer("all-MiniLM-L6-v2", local_files_only=True)
+            except Exception:
+                self._model = SentenceTransformer("all-MiniLM-L6-v2")
             personal_vecs = self._model.encode(PERSONAL_EXAMPLES, convert_to_numpy=True)
             general_vecs  = self._model.encode(GENERAL_EXAMPLES,  convert_to_numpy=True)
             self._personal_proto = personal_vecs.mean(axis=0)
             self._general_proto  = general_vecs.mean(axis=0)
             self._use_embeddings = True
-            print("[ Router ] ✓ Embedding-based routing active")
+            try:
+                print("[ Router ] [OK] Embedding-based routing active")
+            except Exception:
+                pass
         except ImportError:
-            print("[ Router ] sentence-transformers not installed — keyword routing")
+            try:
+                print("[ Router ] sentence-transformers not installed - keyword routing")
+            except Exception:
+                pass
         except Exception as e:
-            print(f"[ Router ] Model load failed: {e} — keyword routing")
+            try:
+                print(f"[ Router ] Model load failed: {e} - keyword routing")
+            except Exception:
+                pass
 
     def _cosine_sim(self, a, b) -> float:
         na = self._np.linalg.norm(a)
@@ -172,6 +202,8 @@ class SemanticRouter:
 
         # ── Keyword fallback ──────────────────────────────────────────
         personal_kw = ["feel","feeling","felt","sad","happy","angry","upset","lonely",
+                        "my day","today was","yesterday","i had a","i went","i met","i saw",
+                        "day went","good day","bad day","rough day","great day",
                         "miss","love","cry","depressed","anxious","stress","scared",
                         "worried","hurt","breakup","relationship","friend","family",
                         "vent","talk to me","boring","bored","don't know what to do"]

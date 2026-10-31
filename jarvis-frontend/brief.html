@@ -4,28 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JARVIS — Daily Brief</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary:#00d2ff; --dark-bg:#010a14; --panel-bg:rgba(0,20,40,0.85);
-            --border:rgba(0,210,255,0.3); --glow:rgba(0,210,255,0.5);
-            --text-dim:rgba(0,210,255,0.55); --gold:#ffd700; --red:#ff4d4d;
-            --green:#00ff88; --purple:#a78bfa;
-            --font-hud:'Orbitron',sans-serif; --font-ui:'Rajdhani',sans-serif;
-            --font-mono:'Share Tech Mono',monospace;
+            --primary:#f8fafc; --dark-bg:#0f172a; --panel-bg:rgba(30,41,59,0.6);
+            --border:rgba(255,255,255,0.1); --glow:rgba(99,102,241,0.4);
+            --text-dim:#94a3b8; --gold:#f59e0b; --red:#ef4444;
+            --green:#10b981; --purple:#8b5cf6; --accent:#6366f1;
+            --font-hud:'Inter', 'Space Grotesk', sans-serif; --font-ui:'Inter', 'Outfit', sans-serif;
+            --font-mono:'Fira Code', monospace;
         }
         *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
         body{
             background:var(--dark-bg);color:var(--primary);font-family:var(--font-ui);
             min-height:100vh;font-size:16px;
-            background-image:radial-gradient(ellipse at 50% 20%,rgba(0,31,63,0.5) 0%,transparent 60%),
-                             linear-gradient(180deg,#010a14 0%,#020f1e 100%);
+            background-image: radial-gradient(ellipse at center top, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
         }
-        /* Grid bg */
-        body::before{content:'';position:fixed;inset:0;pointer-events:none;
-            background-image:linear-gradient(rgba(0,210,255,0.03) 1px,transparent 1px),
-                             linear-gradient(90deg,rgba(0,210,255,0.03) 1px,transparent 1px);
-            background-size:60px 60px;z-index:0;}
 
         .page-wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 24px 60px;}
 
@@ -41,7 +35,7 @@
             cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-block;
         }
         .back-btn:hover{border-color:var(--primary);color:var(--primary);}
-        .brief-title{font-family:var(--font-hud);font-size:1.6rem;font-weight:900;letter-spacing:8px;text-shadow:0 0 20px var(--primary);}
+        .brief-title{font-family:var(--font-hud);font-size:1.8rem;font-weight:700;letter-spacing:1px; color:#fff;}
         .brief-date-display{font-family:var(--font-mono);font-size:0.85rem;opacity:0.6;margin-top:4px;}
         .date-nav{display:flex;align-items:center;gap:12px;}
         .date-nav button{
@@ -57,9 +51,10 @@
         /* ── SECTION CARD ── */
         .section-card{
             background:var(--panel-bg);border:1px solid var(--border);
-            border-left:3px solid var(--primary);
-            padding:22px 24px;margin-bottom:20px;backdrop-filter:blur(10px);
+            border-radius:16px; border-left:4px solid var(--accent);
+            padding:22px 24px;margin-bottom:20px;backdrop-filter:blur(24px);
             transition:border-color 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
         .section-card.personal{border-left-color:var(--purple);}
         .section-card.todos{border-left-color:var(--gold);}
@@ -71,7 +66,7 @@
         }
         .section-title-row{display:flex;align-items:center;gap:12px;}
         .section-icon{font-size:1.4rem;}
-        .section-title{font-family:var(--font-hud);font-size:0.9rem;letter-spacing:4px;}
+        .section-title{font-family:var(--font-hud);font-size:1rem;letter-spacing:1px;}
         .section-count{
             font-family:var(--font-mono);font-size:0.72rem;
             padding:3px 10px;background:rgba(0,210,255,0.1);border:1px solid var(--border);
@@ -200,21 +195,21 @@
     <!-- HEADER -->
     <div class="brief-header">
         <div class="brief-header-left">
-            <a href="index.html" class="back-btn">← BACK TO HUD</a>
+            <a href="index.html" class="back-btn">← Back to Dashboard</a>
             <div>
-                <div class="brief-title">◈ DAILY BRIEF</div>
+                <div class="brief-title">◈ Daily Brief</div>
                 <div class="brief-date-display" id="display-date">Loading...</div>
             </div>
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
             <div class="n8n-status" id="n8n-status">
                 <div class="n8n-dot disconnected" id="n8n-dot"></div>
-                <span id="n8n-label">n8n: CHECKING...</span>
+                <span id="n8n-label">n8n: Checking...</span>
             </div>
             <div class="date-nav">
-                <button onclick="changeDate(-1)">◀ PREV</button>
+                <button onclick="changeDate(-1)">◀ Prev</button>
                 <input type="date" id="date-picker" onchange="loadBriefForDate(this.value)">
-                <button onclick="changeDate(1)">NEXT ▶</button>
+                <button onclick="changeDate(1)">Next ▶</button>
             </div>
         </div>
     </div>
@@ -224,12 +219,12 @@
         <div class="section-header">
             <div class="section-title-row">
                 <span class="section-icon">☀</span>
-                <span class="section-title">MORNING BRIEF</span>
+                <span class="section-title">Morning Brief</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <button class="edit-btn" id="brief-edit-btn" onclick="toggleBriefEdit()">✎ EDIT</button>
-                <button class="save-btn" onclick="saveBrief()" style="padding:6px 16px;font-size:0.65rem;">SAVE</button>
-                <span class="save-status" id="brief-save-status">✓ SAVED</span>
+                <button class="edit-btn" id="brief-edit-btn" onclick="toggleBriefEdit()">✎ Edit</button>
+                <button class="save-btn" onclick="saveBrief()" style="padding:6px 16px;font-size:0.75rem;">Save</button>
+                <span class="save-status" id="brief-save-status">✓ Saved</span>
             </div>
         </div>
         <div class="brief-text-display empty" id="brief-display">No brief for this day yet. Say "morning brief" to Jarvis or type one below.</div>
@@ -241,18 +236,18 @@
         <div class="section-header">
             <div class="section-title-row">
                 <span class="section-icon">📋</span>
-                <span class="section-title">THINGS TO DO</span>
+                <span class="section-title">Things To Do</span>
                 <span class="section-count" id="todos-count">0</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);">No deadline — desires &amp; intentions</span>
-                <button class="edit-btn" id="todos-edit-btn" onclick="toggleTodosEdit()">✎ EDIT</button>
+                <button class="edit-btn" id="todos-edit-btn" onclick="toggleTodosEdit()">✎ Edit</button>
             </div>
         </div>
         <div class="goals-list" id="todos-list"></div>
         <div class="add-item-row" id="todos-add-row" style="display:none;">
             <input type="text" class="add-input" id="todos-input" placeholder="Add something to do..." onkeydown="if(event.key==='Enter') addTodo()">
-            <button class="add-btn" onclick="addTodo()">+ ADD</button>
+            <button class="add-btn" onclick="addTodo()">+ Add</button>
         </div>
     </div>
 
@@ -261,19 +256,19 @@
         <div class="section-header">
             <div class="section-title-row">
                 <span class="section-icon">⏱</span>
-                <span class="section-title">THINGS TO COMPLETE</span>
+                <span class="section-title">Things To Complete</span>
                 <span class="section-count" id="deadlines-count">0</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-dim);">With deadlines</span>
-                <button class="edit-btn" id="deadlines-edit-btn" onclick="toggleDeadlinesEdit()">✎ EDIT</button>
+                <button class="edit-btn" id="deadlines-edit-btn" onclick="toggleDeadlinesEdit()">✎ Edit</button>
             </div>
         </div>
         <div id="deadlines-list"></div>
         <div class="add-item-row" id="deadlines-add-row" style="display:none;">
             <input type="text" class="add-input" id="deadline-title-input" placeholder="Project or task name..." style="flex:2">
             <input type="date" class="add-input" id="deadline-date-input" style="flex:1">
-            <button class="add-btn" onclick="addDeadlineItem()">+ ADD</button>
+            <button class="add-btn" onclick="addDeadlineItem()">+ Add</button>
         </div>
     </div>
 
@@ -380,13 +375,13 @@ function toggleBriefEdit() {
         textarea.style.display = 'block';
         textarea.focus();
         btn.classList.add('active');
-        btn.textContent = '✓ DONE';
+        btn.textContent = '✓ Done';
     } else {
         saveBrief();
         display.style.display  = '';
         textarea.style.display = 'none';
         btn.classList.remove('active');
-        btn.textContent = '✎ EDIT';
+        btn.textContent = '✎ Edit';
     }
 }
 
@@ -487,7 +482,7 @@ function toggleTodosEdit() {
     const btn     = document.getElementById('todos-edit-btn');
     const addRow  = document.getElementById('todos-add-row');
     btn.classList.toggle('active', editingTodos);
-    btn.textContent    = editingTodos ? '✓ DONE' : '✎ EDIT';
+    btn.textContent    = editingTodos ? '✓ Done' : '✎ Edit';
     addRow.style.display = editingTodos ? 'flex' : 'none';
     renderTodos();
 }
@@ -509,9 +504,9 @@ function renderDeadlines() {
         .map(dl => {
             const due      = new Date(dl.dueDate); due.setHours(0,0,0,0);
             const daysLeft = Math.ceil((due-today)/86400000);
-            let badgeClass = 'ok', badgeText = `${daysLeft}d LEFT`;
-            if (daysLeft < 0)      { badgeClass='urgent';  badgeText=`${Math.abs(daysLeft)}d OVERDUE`; }
-            else if (daysLeft <= 1){ badgeClass='urgent';  badgeText=daysLeft===0?'DUE TODAY':'DUE TOMORROW'; }
+            let badgeClass = 'ok', badgeText = `${daysLeft}d left`;
+            if (daysLeft < 0)      { badgeClass='urgent';  badgeText=`${Math.abs(daysLeft)}d overdue`; }
+            else if (daysLeft <= 1){ badgeClass='urgent';  badgeText=daysLeft===0?'Due today':'Due tomorrow'; }
             else if (daysLeft <= 3){ badgeClass='warning'; }
             return `
             <div class="deadline-item-brief">
@@ -559,7 +554,7 @@ function toggleDeadlinesEdit() {
     const btn    = document.getElementById('deadlines-edit-btn');
     const addRow = document.getElementById('deadlines-add-row');
     btn.classList.toggle('active', editingDeadlines);
-    btn.textContent      = editingDeadlines ? '✓ DONE' : '✎ EDIT';
+    btn.textContent      = editingDeadlines ? '✓ Done' : '✎ Edit';
     addRow.style.display = editingDeadlines ? 'flex' : 'none';
     renderDeadlines();
 }
@@ -577,12 +572,12 @@ async function checkN8N() {
         const r = await fetch('http://localhost:5678/healthz', {signal:AbortSignal.timeout(2000)});
         if (r.ok) {
             document.getElementById('n8n-dot').className   = 'n8n-dot connected';
-            document.getElementById('n8n-label').textContent = 'n8n: CONNECTED';
+            document.getElementById('n8n-label').textContent = 'n8n: Connected';
             return;
         }
     } catch {}
     document.getElementById('n8n-dot').className   = 'n8n-dot disconnected';
-    document.getElementById('n8n-label').textContent = 'n8n: OFFLINE';
+    document.getElementById('n8n-label').textContent = 'n8n: Offline';
 }
 
 // ── INIT ─────────────────────────────────────────────────

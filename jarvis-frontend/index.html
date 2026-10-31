@@ -1,267 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS v2.0 | Stark HUD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Slayer Hub</title>
     <link rel="stylesheet" href="style.css">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
-        rel="stylesheet">
 </head>
-
 <body>
 
-    <div class="hud-overlay">
-        <div class="scanlines"></div>
-        <div class="grid-bg"></div>
-        <div class="vignette"></div>
-    </div>
-    <div class="corner tl"></div>
-    <div class="corner tr"></div>
-    <div class="corner bl"></div>
-    <div class="corner br"></div>
+    <div class="grain-overlay"></div>
 
-    <div class="hud-grid">
+    <div class="app-container">
+        
+        <!-- Slash Transition Overlay -->
+        <div class="slash-transition" id="slash-overlay"></div>
 
-        <!-- ══ LEFT COLUMN ══ -->
-        <div class="col-left">
-            <!-- Clock -->
-            <div class="panel">
-                <div class="ph"><span class="dot"></span>SYSTEM TIME</div>
-                <div class="clock" id="clock">00:00:00</div>
-                <div class="date-d" id="date">APR 18</div>
-                <div class="dv"></div>
-                <div class="stats">
-                    <div class="sbar"><span>MEM</span>
-                        <div class="bg">
-                            <div class="fill" id="mem-fill" style="width:48%"></div>
-                        </div><span>48%</span>
+        <!-- 1. MISSION HUB (Active by default) -->
+        <div class="view active" id="view-hub">
+            <div class="map-bg"></div>
+            <!-- Dynamic map pulses -->
+            <div class="demon-scent" style="top: 30%; left: 40%;" onclick="openMission('Urban Court 3v3', '🏀')"></div>
+            <div class="demon-scent" style="top: 60%; left: 70%;" onclick="openMission('Downtown Run 10k', '🏃')"></div>
+            <div class="demon-scent" style="top: 20%; left: 80%;" onclick="openMission('Midnight Sparring', '🥊')"></div>
+            
+            <div class="hub-content">
+                <div class="glass-card mission-card" id="mission-card">
+                    <div class="mc-header">
+                        <div class="sport-icon" id="mc-icon">🏀</div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.8rem; color: var(--theme-color); font-weight: 600;">ACTIVE RAID</div>
+                            <div class="mc-title" id="mc-title">Urban Court 3v3</div>
+                        </div>
                     </div>
-                    <div class="sbar"><span>PWR</span>
-                        <div class="bg">
-                            <div class="fill" id="battery-fill" style="width:0%"></div>
-                        </div><span><span id="battery-level">--</span>%</span>
+                    
+                    <div class="progress-wrap">
+                        <div class="progress-label">
+                            <span>Slayers Needed</span>
+                            <span id="mc-progress-text">3/10</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="mc-progress-fill" style="width: 30%;"></div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <!-- Activity Log -->
-            <div class="panel log-wrap" style="flex:1">
-                <div class="ph"><span class="dot"></span>ACTIVITY LOG</div>
-                <div class="log-list" id="log-list">
-                    <div class="log-item">[ SYS ] JARVIS v2.0 INITIALIZED</div>
-                    <div class="log-item">[ BRAIN ] DUAL-BRAIN ACTIVE</div>
-                    <div class="log-item">[ ROUTER ] SEMANTIC ROUTER READY</div>
-                </div>
-            </div>
-            <!-- Notes -->
-            <div class="panel" style="flex-shrink:0">
-                <div class="ph"><span class="dot"></span>NOTES</div>
-                <div style="display:flex;flex-direction:column;gap:4px">
-                    <div class="note-item">— Morning brief auto at 07:30</div>
-                    <div class="note-item">— "Goodnight" for nightly recap</div>
-                    <div class="note-item">— "Check my screen" for vision</div>
-                    <div class="note-item">— Set GROQ_API_KEY for full power</div>
+
+                    <button class="btn-primary" id="btn-join-mission" onclick="joinMission(this)">JOIN MISSION</button>
                 </div>
             </div>
         </div>
 
-        <!-- ══ CENTER ══ -->
-        <div class="col-center">
-            <!-- Title + Brain Bar -->
-            <div class="center-top">
-                <div class="title">J.A.R.V.I.S</div>
-                <div class="subtitle">VOICE-FIRST AGENTIC OS — v2.0</div>
-                <div class="brain-bar">
-                    <div class="bi" id="brain-personal">
-                        <div class="bd pd"></div><span>PERSONAL</span><span class="bs" id="pb-state">LOCAL</span>
-                    </div>
-                    <span class="bsep">⟋</span>
-                    <div class="bi" id="brain-general">
-                        <div class="bd gd"></div><span>GENERAL</span><span class="bs" id="gb-state">GROQ</span>
-                    </div>
-                    <span class="bsep">⟋</span>
-                    <div class="bi" id="brain-router">
-                        <div class="bd rd"></div><span>ROUTER</span><span class="bs" id="rt-state">READY</span>
+        <!-- 2. BREATHING DASHBOARD -->
+        <div class="view" id="view-dashboard">
+            <div class="dashboard-content">
+                <div style="text-align: center;">
+                    <div class="heading">Breathing Focus</div>
+                    <div style="color: var(--text-dim); font-size: 0.9rem;">Total Concentration Maintained</div>
+                </div>
+
+                <div class="telemetry-center" id="telemetry-box">
+                    <div class="telemetry-ring"></div>
+                    <div class="telemetry-core">
+                        <div class="bpm-val" id="hr-val">142</div>
+                        <div class="bpm-lbl">Intensity</div>
                     </div>
                 </div>
-            </div>
-            <!-- Arc Reactor -->
-            <div class="arc-wrap">
-                <div class="arc">
-                    <div class="ring or"></div>
-                    <div class="ring mr"></div>
-                    <div class="ring ir"></div>
-                    <div class="core" id="arc-core"></div>
+
+                <div>
+                    <h3 style="font-family: var(--font-body); font-weight: 600; margin-bottom: 12px; font-size: 1.1rem;">Nichirin Medals</h3>
+                    <div class="medals-scroll">
+                        <div class="glass-card medal">
+                            <div class="medal-icon" style="color: #FFD700;">☀️</div>
+                            <div>Dawn<br>Striker</div>
+                        </div>
+                        <div class="glass-card medal">
+                            <div class="medal-icon" style="color: #00D1FF;">🌊</div>
+                            <div>Fluid<br>Motion</div>
+                        </div>
+                        <div class="glass-card medal">
+                            <div class="medal-icon" style="color: #FF4D00;">🔥</div>
+                            <div>Blazing<br>Pace</div>
+                        </div>
+                        <div class="glass-card medal" style="opacity: 0.5;">
+                            <div class="medal-icon" style="color: #555;">🔒</div>
+                            <div>???</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <!-- Response -->
-            <div class="interact">
-                <div class="you-line" id="transcript-you"></div>
-                <div class="resp-line" id="jarvis-response">SYSTEMS ONLINE. DUAL-BRAIN ARCHITECTURE ACTIVE. AWAITING
-                    COMMAND.</div>
-                <div class="srow">
-                    <div class="sbadge" id="status-badge">STANDBY</div>
-                    <div class="abbadge" id="active-brain-badge"></div>
+                
+                <div class="style-selector">
+                    <button class="style-btn sb-sun active" onclick="setBreathingStyle('sun')"></button>
+                    <button class="style-btn sb-water" onclick="setBreathingStyle('water')"></button>
+                    <button class="style-btn sb-flame" onclick="setBreathingStyle('flame')"></button>
+                    <button class="style-btn sb-thunder" onclick="setBreathingStyle('thunder')"></button>
                 </div>
+
             </div>
         </div>
 
-        <!-- ══ RIGHT COLUMN ══ -->
-        <div class="col-right">
-            <!-- Weather -->
-            <div class="panel rp" style="flex-shrink:0;text-align:right">
-                <div class="ph" style="justify-content:flex-end">ATMOSPHERIC <span class="dot"></span></div>
-                <div class="temp"><span id="temp-val">--</span>°C</div>
-                <div class="city" id="city-name">LOCATING...</div>
-                <div class="cond" id="condition">ANALYSING</div>
-            </div>
-            <!-- Agentic Core -->
-            <div class="panel rp ag-panel">
-                <div class="ph"><span class="dot"></span>AGENTIC CORE</div>
-                <div class="tabs">
-                    <button class="tab active" onclick="switchTab(this,'deadlines')">DL</button>
-                    <button class="tab" onclick="switchTab(this,'memory')">MEM</button>
-                    <button class="tab" onclick="switchTab(this,'comms')">COMMS</button>
-                </div>
-                <div class="tc active" id="tab-deadlines">
-                    <input type="text" id="dl-title" placeholder="Project name..." class="hi">
-                    <input type="date" id="dl-date" class="hi">
-                    <button class="hbtn" onclick="addDeadline()">+ ADD DEADLINE</button>
-                    <div class="dl-list" id="deadline-list">
-                        <div class="dl-item empty">No active deadlines.</div>
+        <!-- 3. SLAYER PROFILE -->
+        <div class="view" id="view-profile">
+            <div class="profile-content">
+                <div class="heading">Slayer Rank</div>
+                
+                <div class="rank-badge-container">
+                    <div class="rank-badge" id="rank-badge">
+                        <div class="rank-char">癸</div> <!-- Mizunoto -->
                     </div>
                 </div>
-                <div class="tc" id="tab-memory">
-                    <div class="mst">
-                        <div class="msr"><span class="msl">CONVERSATIONS</span><span class="msv" id="ms-convs">0</span>
-                        </div>
-                        <div class="msr"><span class="msl">DEADLINES</span><span class="msv" id="ms-reminders">0</span>
-                        </div>
-                        <div class="msr"><span class="msl">TASKS</span><span class="msv" id="ms-tasks">--</span></div>
-                    </div>
-                    <div class="dv"></div>
-                    <button class="hbtn" onclick="openMemoryBrowser()" style="margin-top:4px">◈ MEMORY BROWSER</button>
-                    <button class="hbtn" onclick="requestMemory()" style="margin-top:4px">REFRESH STATS</button>
-                </div>
-                <div class="tc" id="tab-comms">
-                    <div class="cgrid">
-                        <div class="ci" onclick="sendQuickCmd('open gmail')">
-                            <div class="ci-icon">✉</div><span>GMAIL</span>
-                        </div>
-                        <div class="ci" onclick="sendQuickCmd('open github')">
-                            <div class="ci-icon">⌥</div><span>GITHUB</span>
-                        </div>
-                        <div class="ci" onclick="sendQuickCmd('open whatsapp web')">
-                            <div class="ci-icon">◎</div><span>WHATSAPP</span>
-                        </div>
-                        <div class="ci" onclick="sendQuickCmd('open instagram')">
-                            <div class="ci-icon">◈</div><span>INSTAGRAM</span>
-                        </div>
-                        <div class="ci" onclick="sendQuickCmd('open netflix')">
-                            <div class="ci-icon">▶</div><span>NETFLIX</span>
-                        </div>
-                        <div class="ci" onclick="sendQuickCmd('open spotify')">
-                            <div class="ci-icon">♫</div><span>SPOTIFY</span>
-                        </div>
+
+                <div style="width: 100%; margin-top: 20px;">
+                    <h3 style="font-family: var(--font-body); font-weight: 600; margin-bottom: 16px; text-align: center; font-size: 1.1rem;">Combat Attributes</h3>
+                    <div class="spider-graph-container">
+                        <canvas id="spider-graph"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ══ FOOTER ══ -->
-        <div class="col-foot">
-            <div class="cmd-bar">
-                <div class="cmd-wrap">
-                    <span class="cmd-pfx">▷</span>
-                    <input type="text" id="command-input" placeholder="ENTER COMMAND OR SPEAK TO JARVIS..."
-                        autocomplete="off">
-                </div>
-                <button id="bottom-speak-btn" class="spk-btn">
-                    <svg viewBox="0 0 24 24" width="15" height="15">
-                        <path fill="currentColor"
-                            d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-                        <path fill="currentColor"
-                            d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-                    </svg>
-                    <span>SPEAK</span>
-                </button>
-                <button class="ic-btn" onclick="sendMorningBrief()">☀ BRIEF</button>
-                <button class="ic-btn" onclick="openMemoryBrowser()">◈ MEMORY</button>
-                <button class="ic-btn" id="theme-toggle">⟳ PROTOCOL</button>
+        <!-- KASUGAI CHAT (AI Overlay) -->
+        <div class="kasugai-chat" id="kasugai-layer">
+            <div class="chat-header">
+                <div class="chat-title">Kasugai Crow</div>
+                <button class="close-chat" onclick="toggleChat()">✕</button>
             </div>
-            <div class="fstats">
-                <span id="ws-status">WS: CONNECTING...</span>
-                <span>LATENCY: <span id="latency-val">--</span>ms</span>
-                <span id="last-brain-used">BRAIN: --</span>
-                <span>JARVIS v2.0 | DUAL-BRAIN</span>
+            <div class="chat-messages" id="chat-stream">
+                <div class="msg crow">Caw! Systems online. I bring messages from the Ubuyashiki Estate. What is your query?</div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Speak to your Kasugai Crow...">
+                <button class="chat-send" onclick="sendChat()">➤</button>
             </div>
         </div>
 
-    </div>
+        <!-- Float Action Button for Chat -->
+        <button class="fab-chat pulse" id="fab-chat" onclick="toggleChat()">🪶</button>
 
-    <!-- ══ MEMORY MODAL ══ -->
-    <div class="mmmodal" id="memory-modal">
-        <div class="mmhdr">
-            <div class="mmtitle">◈ JARVIS MEMORY ARCHIVE</div>
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                <div class="mmsearch" style="padding:0;border:none;background:transparent;">
-                    <input type="text" id="memory-search-input" placeholder="SEARCH..."
-                        style="min-width:160px;max-width:280px">
-                </div>
-                <button class="mmclose" onclick="closeMemoryBrowser()">✕ CLOSE</button>
+        <!-- NAVIGATION -->
+        <nav class="bottom-nav">
+            <div class="nav-item active" onclick="navTo('hub', this)">
+                <i>✛</i>
+                <span>Missions</span>
             </div>
-        </div>
-        <div class="mmbody">
-            <div class="mmsidebar">
-                <div class="mmstitle">FOLDERS</div>
-                <div class="efold active" onclick="filterByEmotion('all')" id="ef-all"><span class="efi">◉</span><span
-                        class="efl">ALL</span><span class="efc" id="count-all">0</span></div>
-                <div class="efold ef-general" onclick="filterByEmotion('general')" id="ef-general"><span
-                        class="efi">💡</span><span class="efl">GENERAL</span><span class="efc"
-                        id="count-general">0</span></div>
-                <div
-                    style="padding:5px 10px 3px;font-size:0.58rem;letter-spacing:2px;opacity:0.3;font-family:var(--fh)">
-                    PERSONAL</div>
-                <div class="efold ef-happy" onclick="filterByEmotion('happy')" id="ef-happy"><span
-                        class="efi">😊</span><span class="efl">HAPPY</span><span class="efc" id="count-happy">0</span>
-                </div>
-                <div class="efold ef-sad" onclick="filterByEmotion('sad')" id="ef-sad"><span class="efi">💧</span><span
-                        class="efl">SAD</span><span class="efc" id="count-sad">0</span></div>
-                <div class="efold ef-angry" onclick="filterByEmotion('angry')" id="ef-angry"><span
-                        class="efi">🔥</span><span class="efl">ANGRY</span><span class="efc" id="count-angry">0</span>
-                </div>
-                <div class="efold ef-anxious" onclick="filterByEmotion('anxious')" id="ef-anxious"><span
-                        class="efi">⚡</span><span class="efl">ANXIOUS</span><span class="efc"
-                        id="count-anxious">0</span></div>
-                <div class="efold ef-motivated" onclick="filterByEmotion('motivated')" id="ef-motivated"><span
-                        class="efi">🚀</span><span class="efl">MOTIVATED</span><span class="efc"
-                        id="count-motivated">0</span></div>
-                <div class="efold ef-betrayal" onclick="filterByEmotion('betrayal')" id="ef-betrayal"><span
-                        class="efi">🗡</span><span class="efl">BETRAYAL</span><span class="efc"
-                        id="count-betrayal">0</span></div>
-                <div class="efold ef-love" onclick="filterByEmotion('love')" id="ef-love"><span
-                        class="efi">💜</span><span class="efl">LOVE</span><span class="efc" id="count-love">0</span>
-                </div>
-                <div class="efold ef-neutral" onclick="filterByEmotion('neutral')" id="ef-neutral"><span
-                        class="efi">◎</span><span class="efl">NEUTRAL</span><span class="efc"
-                        id="count-neutral">0</span></div>
+            <div class="nav-item" onclick="navTo('dashboard', this)">
+                <i>◎</i>
+                <span>Breathing</span>
             </div>
-            <div class="mmclist">
-                <div class="mmct" id="conv-list-title">ALL CONVERSATIONS</div>
-                <div id="conv-cards-container">
-                    <div style="opacity:0.4;text-align:center;padding:20px;font-family:var(--fm);font-size:0.72rem;">No
-                        conversations yet.</div>
-                </div>
+            <div class="nav-item" onclick="navTo('profile', this)">
+                <i>◈</i>
+                <span>Profile</span>
             </div>
-            <div class="mmdetail" id="conv-detail">
-                <div class="detempty">SELECT A CONVERSATION</div>
-            </div>
-        </div>
+        </nav>
+
     </div>
 
     <script src="app.js"></script>
 </body>
-
 </html>

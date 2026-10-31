@@ -33,7 +33,10 @@ class JarvisLogger:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         icon      = CATEGORIES.get(category.upper(), "•")
         line      = f"[{timestamp}] {icon} [{category}] {message}"
-        print(line)
+        try:
+            print(line)
+        except Exception:
+            pass  # Console encoding failure \u2014 file log still written
         try:
             with open(self.log_file, "a", encoding="utf-8") as f:
                 f.write(line + "\n")
